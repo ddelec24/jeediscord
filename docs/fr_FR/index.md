@@ -172,7 +172,14 @@ Pour éviter les fausses alertes, une panne n'est signalée que si elle dure au 
 
 ## Captures des caméras
 
-Le plugin **Caméra** de Jeedom sait envoyer ses captures à une commande de messagerie : sa commande « Envoyer une capture » (`sendSnapshot`) transmet le titre, le message et les fichiers à la commande indiquée dans son paramètre `sendTo`. Les commandes « Envoyer un message » et « Envoyer un fichier » de JeeDiscord acceptent ces fichiers : il suffit d'indiquer l'une d'elles comme destinataire, par exemple `#[Salon][Discord][Envoyer un message]#`. Aucun réglage supplémentaire n'est nécessaire.
+C'est le plugin **Caméra** qui prend les captures et les envoie : on ne met donc **pas** de commande de caméra dans JeeDiscord, mais l'inverse. Dans une action de scénario, choisissez la commande **« Enregistrer »** de la caméra (par exemple `#[Salon][Ma caméra][Enregistrer]#`, masquée du dashboard mais disponible dans les scénarios) et renseignez ses deux champs. Attention, la commande « Capture » du plugin Caméra ne fait qu'enregistrer un fichier sur Jeedom : elle n'envoie rien.
+
+- **Nombre captures ou options** : le nombre de captures (par exemple `1`), ou des options du plugin Caméra sous la forme `nbSnap=3 delay=2` (nombre de captures et secondes entre deux captures) ;
+- **Commande message d'envoi des captures** : la commande JeeDiscord qui recevra les images, par exemple **[Salon][Discord][Envoyer un message]** (ou « Envoyer un fichier »). Utilisez le sélecteur de commandes en bout de ligne.
+
+Le plugin Caméra appelle alors cette commande avec les fichiers des captures, qui sont envoyés dans le salon de l'équipement. Le champ « Fichiers » de la commande JeeDiscord n'est pas utilisé dans ce cas : il sert aux fichiers dont vous donnez vous-même le chemin. Les captures sont lues au moment de l'envoi, comme les autres fichiers (voir « Envoyer un fichier » pour les limites de taille et les dossiers refusés).
+
+**Texte joint aux captures** : c'est le plugin Caméra qui fournit le texte transmis à JeeDiscord. Par défaut, il envoie un texte du type « Alerte sur la caméra *nom* à *date* ». Pour le remplacer, ajoutez `message=` dans le champ « Nombre captures ou options », avec des guillemets si le texte contient des espaces : `nbSnap=1 message="Capture demandée :"`. Le paramètre `title=` n'est pas pris en compte par le plugin Caméra. Avec « Envoyer un message » comme destination, le texte est affiché au-dessus des images ; avec « Envoyer un fichier », il les accompagne.
 
 ## Modifier ou supprimer le dernier message
 
@@ -285,6 +292,7 @@ Avant d'envoyer, le plugin vérifie les droits du bot dans le salon (voir, envoy
 | « Intent Message Content non activé » | Activez **Message Content Intent** dans l'onglet Bot du portail développeur, puis sauvegardez la configuration du plugin. |
 | « Dépendances non installées » | Lancez l'installation des dépendances depuis la page du plugin et consultez le log `jeediscord_packages`. |
 | Aucun salon dans la liste de l'équipement | Le démon n'est pas connecté, ou le bot n'a pas le droit de voir les salons : vérifiez le statut du bot dans la configuration et les permissions « View Channels ». |
+| Les captures de la caméra n'arrivent pas | Utilisez la commande « Enregistrer » **de la caméra** et indiquez la commande JeeDiscord dans son champ de destination (voir « Captures des caméras »). Consultez le log `camera_record` du plugin Caméra et le log `jeediscord`. |
 | Un message n'est pas envoyé | Consultez le log `jeediscord` : un droit manquant (envoyer des messages, intégrer des liens, joindre des fichiers) y est indiqué. |
 | Les commandes slash n'apparaissent pas | Réinvitez le bot avec le scope `applications.commands`, puis redémarrez le démon. Vérifiez que « Commandes slash » est activé dans la configuration. |
 | « Ce salon n'est associé à aucun équipement JeeDiscord actif » | Les commandes slash et les boutons ne fonctionnent que dans les salons d'un équipement actif. |
