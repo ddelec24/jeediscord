@@ -92,7 +92,7 @@ Chaque équipement dispose des commandes suivantes, utilisables dans les scénar
 |---|---|---|
 | Envoyer un message | action / message | Envoie un texte. Le titre, s'il est renseigné, est affiché en gras sur la première ligne. |
 | Envoyer un embed | action / message | Envoie un message enrichi (titre, lien, description, champs, image, couleur, pied de page, horodatage). |
-| Envoyer un fichier | action / message | Envoie un ou plusieurs fichiers, avec un texte optionnel. |
+| Envoyer un fichier | action / message | Envoie un ou plusieurs fichiers (chemin local ou adresse web), avec un texte optionnel. |
 | Envoyer le résumé de la maison | action / autre | Envoie un embed avec les résumés globaux de Jeedom (température, humidité, ouvertures...) et l'état des batteries. |
 | Envoyer le résumé d'un objet | action / message | Envoie les résumés d'un objet Jeedom, choisi dans la liste des objets. |
 | Envoyer l'état des batteries | action / autre | Envoie la liste des équipements dont la batterie est faible, avec le nombre de batteries bonnes. |
@@ -137,7 +137,9 @@ Les textes trop longs sont raccourcis pour respecter les limites de Discord (600
 
 ## Envoyer un fichier
 
-Indiquez le chemin complet d'un fichier par ligne. Discord accepte 10 fichiers par message : au-delà, plusieurs messages sont envoyés. La taille maximale d'un fichier dépend du niveau de boost du serveur (10 Mo sans boost, 50 Mo au niveau 2, 100 Mo au niveau 3). Les fichiers trop volumineux sont ignorés et signalés dans le log.
+Indiquez le chemin complet d'un fichier, **ou son adresse web** (`http://` ou `https://`), un par ligne. Discord accepte 10 fichiers par message : au-delà, plusieurs messages sont envoyés. La taille maximale d'un fichier dépend du niveau de boost du serveur (10 Mo sans boost, 50 Mo au niveau 2, 100 Mo au niveau 3). Les fichiers trop volumineux sont ignorés et signalés dans le log.
+
+**Adresses web** : le fichier est d'abord téléchargé par Jeedom dans son dossier temporaire (`/tmp/jeedom/jeediscord/download`), puis envoyé comme un fichier local, et supprimé aussitôt après l'envoi. Le scénario attend la fin du téléchargement avant de continuer. Le fichier garde le nom de l'adresse (une extension est ajoutée d'après le type du contenu si elle manque), les redirections sont suivies, et le téléchargement est limité à 60 secondes et 100 Mo. Les adresses du réseau local (par exemple l'image d'une caméra) sont acceptées. Les identifiants et paramètres d'une adresse ne sont jamais écrits dans les logs. En cas d'échec, une alerte est inscrite dans le log `jeediscord` et le fichier est ignoré. Une adresse peut contenir des virgules : seul le retour à la ligne sépare deux fichiers.
 
 Par sécurité, les fichiers de configuration de Jeedom (`core/config`), les dossiers système (`/etc`, `/root`...) et les fichiers ou dossiers cachés ne peuvent pas être envoyés.
 

@@ -105,7 +105,11 @@
         "Répondez en écrivant un message dans ce salon": "Antworten Sie mit einer Nachricht in diesem Kanal",
         "Fichiers ignorés": "Ignorierte Dateien",
         "Fichier introuvable ou illisible": "Datei nicht gefunden oder nicht lesbar",
-        "Envoi de ce fichier refusé": "Senden dieser Datei abgelehnt"
+        "Envoi de ce fichier refusé": "Senden dieser Datei abgelehnt",
+        "Téléchargement impossible : dossier temporaire inaccessible": "Download nicht möglich: temporärer Ordner nicht zugänglich",
+        "Téléchargement impossible": "Download nicht möglich",
+        "Fichier téléchargé": "Datei heruntergeladen",
+        "octets": "Bytes"
     },
     "plugins\/jeediscord\/core\/class\/jeediscordReport.class.php": {
         "Résumé de la maison": "Zusammenfassung des Hauses",
@@ -163,7 +167,7 @@
     },
     "plugins\/jeediscord\/core\/template\/scenario\/cmd.action.message.jeediscordFile.html": {
         "Fichiers": "Dateien",
-        "Chemin complet d'un fichier par ligne (10 maximum par message)": "Vollständiger Pfad einer Datei pro Zeile (maximal 10 pro Nachricht)",
+        "Chemin complet ou adresse web (http, https) d'un fichier par ligne (10 maximum par message)": "Vollständiger Pfad oder Webadresse (http, https) einer Datei pro Zeile (maximal 10 pro Nachricht)",
         "Message": "Nachricht",
         "Texte accompagnant les fichiers (optionnel)": "Begleittext zu den Dateien (optional)",
         "Sélectionner une commande": "Befehl auswählen"

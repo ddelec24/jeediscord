@@ -1239,7 +1239,12 @@ class jeediscordCmd extends cmd {
         ),
       );
     }
-    $result = jeediscord::sendToDaemon('send', $params);
+    try {
+      $result = jeediscord::sendToDaemon('send', $params);
+    } finally {
+      // Le démon lit les fichiers dès la réception de l'envoi : les fichiers téléchargés ne servent plus
+      self::cleanDownloads();
+    }
     if (is_array($result) && !empty($result['ignoredFiles'])) {
       log::add('jeediscord', 'warning', __('Fichiers ignorés', __FILE__) . ' : ' . implode(', ', $result['ignoredFiles']));
     }
@@ -1287,7 +1292,16 @@ class jeediscordCmd extends cmd {
    */
   public static function normalizeFiles($_files) {
     if (!is_array($_files)) {
-      $_files = preg_split('/[\r\n,;]+/', (string) $_files);
+      // Une adresse web peut contenir des virgules ou des points-virgules : seul le retour à la ligne la sépare
+      $list = array();
+      foreach (preg_split('/\r\n|\r|\n/', (string) $_files) as $line) {
+        if (preg_match('#^\s*https?://#i', $line)) {
+          $list[] = $line;
+        } else {
+          $list = array_merge($list, preg_split('/[,;]+/', $line));
+        }
+      }
+      $_files = $list;
     }
     $jeedomRoot = realpath(__DIR__ . '/../../../..');
     $forbidden = array($jeedomRoot . '/core/config/', '/etc/', '/root/', '/proc/', '/sys/');
@@ -1297,7 +1311,12 @@ class jeediscordCmd extends cmd {
       if ($file == '' || $file == '#files#') {
         continue;
       }
-      if ($file[0] != '/') {
+      if (preg_match('#^https?://#i', $file)) {
+        $file = self::downloadFile($file);
+        if ($file === null) {
+          continue;
+        }
+      } elseif ($file[0] != '/') {
         $file = $jeedomRoot . '/' . $file;
       }
       $path = realpath($file);
@@ -1314,6 +1333,108 @@ class jeediscordCmd extends cmd {
       $return[] = $path;
     }
     return array_values(array_unique($return));
+  }
+
+  /** Fichiers téléchargés pour l'envoi en cours (dossiers à supprimer après l'envoi) */
+  private static $downloads = array();
+
+  const DOWNLOAD_MAX_SIZE = 104857600; // 100 Mo : la plus grande limite d'envoi de Discord
+  const DOWNLOAD_TIMEOUT = 60;
+  const DOWNLOAD_MAX_AGE = 3600;
+
+  /**
+   * Adresse sans identifiants ni paramètres, pour les logs
+   */
+  private static function displayUrl($_url) {
+    $parts = parse_url($_url);
+    return (isset($parts['scheme']) ? $parts['scheme'] . '://' : '') . (isset($parts['host']) ? $parts['host'] : '') . (isset($parts['port']) ? ':' . $parts['port'] : '') . (isset($parts['path']) ? $parts['path'] : '');
+  }
+
+  /**
+   * Télécharge une adresse web (http ou https) dans le dossier temporaire du plugin, avant l'envoi.
+   * Le fichier garde le nom de l'adresse ; une extension est ajoutée d'après le type du contenu si elle manque.
+   * @param string $_url
+   * @return string|null chemin du fichier téléchargé, null en cas d'échec (consigné dans le log)
+   */
+  private static function downloadFile($_url) {
+    $display = self::displayUrl($_url);
+    $base = jeedom::getTmpFolder('jeediscord') . '/download';
+    if (!is_dir($base) && !@mkdir($base, 0700, true)) {
+      log::add('jeediscord', 'warning', __('Téléchargement impossible : dossier temporaire inaccessible', __FILE__) . ' : ' . $base);
+      return null;
+    }
+    // Nettoyage des restes d'envois interrompus
+    foreach (glob($base . '/*', GLOB_ONLYDIR) as $old) {
+      if (filemtime($old) < time() - self::DOWNLOAD_MAX_AGE) {
+        self::removeDir($old);
+      }
+    }
+    $dir = $base . '/' . bin2hex(random_bytes(8));
+    mkdir($dir, 0700);
+    self::$downloads[] = $dir;
+    $name = urldecode(basename((string) parse_url($_url, PHP_URL_PATH)));
+    $name = trim(preg_replace('/[^\p{L}\p{N}._ -]+/u', '_', $name), '. ');
+    $name = mb_substr($name, 0, 80);
+    if ($name == '') {
+      $name = 'fichier';
+    }
+    $target = $dir . '/' . $name;
+    $handle = fopen($target, 'wb');
+    if ($handle === false) {
+      return null;
+    }
+    $ch = curl_init($_url);
+    curl_setopt_array($ch, array(
+      CURLOPT_FILE => $handle,
+      CURLOPT_FOLLOWLOCATION => true,
+      CURLOPT_MAXREDIRS => 5,
+      CURLOPT_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS,
+      CURLOPT_REDIR_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS,
+      CURLOPT_CONNECTTIMEOUT => 10,
+      CURLOPT_TIMEOUT => self::DOWNLOAD_TIMEOUT,
+      CURLOPT_USERAGENT => 'Jeedom-JeeDiscord',
+      CURLOPT_FAILONERROR => true,
+      CURLOPT_NOPROGRESS => false,
+      // Arrêt dès que la taille dépasse la limite, sans attendre la fin du téléchargement
+      CURLOPT_PROGRESSFUNCTION => function ($resource, $total, $downloaded) {
+        return $downloaded > jeediscordCmd::DOWNLOAD_MAX_SIZE ? 1 : 0;
+      },
+    ));
+    $ok = curl_exec($ch);
+    $error = curl_error($ch);
+    $type = strtolower(trim(explode(';', (string) curl_getinfo($ch, CURLINFO_CONTENT_TYPE))[0]));
+    curl_close($ch);
+    fclose($handle);
+    if ($ok === false || filesize($target) == 0) {
+      log::add('jeediscord', 'warning', __('Téléchargement impossible', __FILE__) . ' : ' . $display . ($error != '' ? ' (' . $error . ')' : ''));
+      return null;
+    }
+    if (strpos($name, '.') === false) {
+      $extensions = array('image/jpeg' => 'jpg', 'image/png' => 'png', 'image/gif' => 'gif', 'image/webp' => 'webp', 'video/mp4' => 'mp4', 'application/pdf' => 'pdf', 'text/plain' => 'txt', 'audio/mpeg' => 'mp3');
+      if (isset($extensions[$type])) {
+        rename($target, $target . '.' . $extensions[$type]);
+        $target .= '.' . $extensions[$type];
+      }
+    }
+    log::add('jeediscord', 'debug', __('Fichier téléchargé', __FILE__) . ' : ' . $display . ' (' . filesize($target) . ' ' . __('octets', __FILE__) . ')');
+    return $target;
+  }
+
+  private static function removeDir($_dir) {
+    foreach (glob($_dir . '/*') as $file) {
+      @unlink($file);
+    }
+    @rmdir($_dir);
+  }
+
+  /**
+   * Supprime les fichiers téléchargés pour l'envoi qui vient d'être transmis au démon
+   */
+  public static function cleanDownloads() {
+    foreach (self::$downloads as $dir) {
+      self::removeDir($dir);
+    }
+    self::$downloads = array();
   }
 
   /*     * **********************Getteur Setteur*************************** */

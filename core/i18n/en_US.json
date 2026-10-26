@@ -105,7 +105,11 @@
         "Répondez en écrivant un message dans ce salon": "Answer by writing a message in this channel",
         "Fichiers ignorés": "Ignored files",
         "Fichier introuvable ou illisible": "File not found or not readable",
-        "Envoi de ce fichier refusé": "Sending this file is not allowed"
+        "Envoi de ce fichier refusé": "Sending this file is not allowed",
+        "Téléchargement impossible : dossier temporaire inaccessible": "Download impossible: temporary folder not accessible",
+        "Téléchargement impossible": "Download impossible",
+        "Fichier téléchargé": "File downloaded",
+        "octets": "bytes"
     },
     "plugins\/jeediscord\/core\/class\/jeediscordReport.class.php": {
         "Résumé de la maison": "Home summary",
@@ -163,7 +167,7 @@
     },
     "plugins\/jeediscord\/core\/template\/scenario\/cmd.action.message.jeediscordFile.html": {
         "Fichiers": "Files",
-        "Chemin complet d'un fichier par ligne (10 maximum par message)": "Full path of one file per line (10 maximum per message)",
+        "Chemin complet ou adresse web (http, https) d'un fichier par ligne (10 maximum par message)": "Full path or web address (http, https) of one file per line (10 maximum per message)",
         "Message": "Message",
         "Texte accompagnant les fichiers (optionnel)": "Text accompanying the files (optional)",
         "Sélectionner une commande": "Select a command"
