@@ -12,4 +12,9 @@
 - Commandes « Envoyer un message », « Envoyer un embed » et « Envoyer un fichier », avec formulaires dédiés dans les scénarios
 - Mentions de membres, de rôles et de salons par leur nom
 - Découpage automatique des longs messages, respect des limites de Discord (embeds, fichiers)
+- Action « Demander » des scénarios : réponses en boutons (menu déroulant au-delà de 10) ou message libre (la question indique comment répondre), boutons désactivés et message complété après la réponse ou le délai
+- Commande « Envoyer des actions rapides » : boutons persistants lançant une commande, un scénario (nom `[Groupe][Objet][Nom]`, `[Groupe][Nom]` accepté) ou une interaction, avec rôles autorisés, sélecteur de scénario et de commande dans le formulaire
+- Correction : les formulaires de scénario « Envoyer un embed » et « Envoyer un fichier » n'enregistraient pas leurs champs
+- Les erreurs inattendues d'une action rapide sont journalisées et signalées à l'utilisateur au lieu de bloquer la réponse
+- Documentation : captures d'écran de la configuration, de l'équipement, des commandes et des formulaires de scénario
 - Réception des messages (contenu, auteur, pièces jointes) et des réactions (emoji, auteur, ajout ou retrait)

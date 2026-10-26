@@ -243,6 +243,7 @@ class jeediscord extends eqLogic {
    * @param array $_data
    */
   public static function handleDaemonEvent($_data) {
+    $return = null;
     $event = isset($_data['event']) ? $_data['event'] : '';
     switch ($event) {
       case 'ready':
@@ -269,6 +270,11 @@ class jeediscord extends eqLogic {
       case 'messageSent':
         log::add(__CLASS__, 'debug', __('Message envoyé', __FILE__) . ' : ' . json_encode($_data));
         break;
+      case 'askAnswer':
+        self::onAskAnswer($_data);
+        break;
+      case 'quickAction':
+        return self::runQuickAction($_data);
       case 'status':
         config::save('connected', !empty($_data['connected']) ? 1 : 0, __CLASS__);
         break;
@@ -283,6 +289,195 @@ class jeediscord extends eqLogic {
       default:
         log::add(__CLASS__, 'debug', __('Événement inconnu reçu du démon', __FILE__) . ' : ' . $event);
     }
+    return $return;
+  }
+
+  /**
+   * Réponse à une question de scénario (clic sur un bouton, choix dans le menu ou message libre) : transmise au core
+   * @param array $_data cmdId, answer
+   */
+  private static function onAskAnswer($_data) {
+    $cmd = cmd::byId(isset($_data['cmdId']) ? $_data['cmdId'] : '');
+    if (!is_object($cmd) || $cmd->getEqType() != __CLASS__) {
+      log::add(__CLASS__, 'warning', __('Réponse reçue pour une commande inconnue', __FILE__) . ' : ' . (isset($_data['cmdId']) ? $_data['cmdId'] : '?'));
+      return;
+    }
+    $answer = isset($_data['answer']) ? (string) $_data['answer'] : '';
+    if ($cmd->askResponse($answer)) {
+      log::add(__CLASS__, 'info', __('Réponse transmise au scénario', __FILE__) . ' : ' . $answer);
+    } else {
+      log::add(__CLASS__, 'debug', __('Réponse ignorée (aucune question en attente ou réponse non prévue)', __FILE__) . ' : ' . $answer);
+    }
+  }
+
+  /**
+   * Enregistrement des définitions des boutons d'actions rapides (identifiant => définition)
+   * @return array
+   */
+  private static function getQuickActions() {
+    $actions = config::byKey('quickActions', __CLASS__, array());
+    return is_array($actions) ? $actions : array();
+  }
+
+  /**
+   * Analyse la saisie des actions rapides : une ligne par bouton,
+   * « Libellé | cmd, scenario ou interaction | cible | rôles autorisés (optionnel) | couleur (optionnel) ».
+   * Les définitions sont conservées pour que les boutons restent actifs après un redémarrage.
+   * @param int $_eqLogicId
+   * @param string $_text
+   * @return array boutons à afficher : id, label, style
+   */
+  public static function registerQuickActions($_eqLogicId, $_text) {
+    $stored = self::getQuickActions();
+    $buttons = array();
+    foreach (preg_split('/\r\n|\r|\n/', (string) $_text) as $line) {
+      if (trim($line) == '') {
+        continue;
+      }
+      $parts = array_map('trim', explode('|', $line));
+      $type = isset($parts[1]) ? strtolower($parts[1]) : '';
+      $target = isset($parts[2]) ? $parts[2] : '';
+      if ($parts[0] == '' || $target == '' || !in_array($type, array('cmd', 'scenario', 'interaction'))) {
+        log::add(__CLASS__, 'warning', __('Action rapide ignorée (format attendu : Libellé | cmd, scenario ou interaction | cible)', __FILE__) . ' : ' . $line);
+        continue;
+      }
+      try {
+        if ($type == 'cmd') {
+          $cmd = cmd::byString($target);
+          if ($cmd->getType() != 'action') {
+            throw new Exception(__('La commande doit être de type action', __FILE__));
+          }
+        } elseif ($type == 'scenario') {
+          self::findScenario($target);
+        }
+      } catch (Exception $e) {
+        log::add(__CLASS__, 'warning', __('Action rapide ignorée', __FILE__) . ' « ' . $parts[0] . ' » : ' . $e->getMessage());
+        continue;
+      }
+      $roles = isset($parts[3]) ? $parts[3] : '';
+      $style = isset($parts[4]) ? strtolower($parts[4]) : '';
+      if (!in_array($style, array('primary', 'secondary', 'success', 'danger'))) {
+        $style = 'primary';
+      }
+      $id = substr(sha1($_eqLogicId . '|' . $parts[0] . '|' . $type . '|' . $target . '|' . $roles), 0, 16);
+      $stored[$id] = array('eqLogicId' => (int) $_eqLogicId, 'label' => $parts[0], 'type' => $type, 'target' => $target, 'roles' => $roles, 'date' => time());
+      $buttons[] = array('id' => $id, 'label' => $parts[0], 'style' => $style);
+    }
+    if (count($buttons) > 25) {
+      log::add(__CLASS__, 'warning', __('25 boutons au maximum par message', __FILE__));
+      $buttons = array_slice($buttons, 0, 25);
+    }
+    if (count($stored) > 1000) {
+      uasort($stored, function ($a, $b) {
+        return $b['date'] - $a['date'];
+      });
+      $stored = array_slice($stored, 0, 1000, true);
+    }
+    config::save('quickActions', $stored, __CLASS__);
+    return $buttons;
+  }
+
+  /**
+   * Scénario désigné par son identifiant ou son nom complet [Groupe][Objet][Nom] (« Aucun » sans objet) ; [Groupe][Nom] est aussi accepté
+   * @param string $_target
+   * @return scenario
+   */
+  private static function findScenario($_target) {
+    $target = trim(trim((string) $_target), '#');
+    if (preg_match('/^scenario(\d+)$/', $target, $matches)) {
+      $target = $matches[1];
+    }
+    if (ctype_digit($target)) {
+      $scenario = scenario::byId($target);
+    } else {
+      $scenario = null;
+      $candidates = array('#' . $target . '#');
+      // [Groupe][Nom] : le nom complet est [Groupe][Objet][Nom], avec « Aucun » sans objet
+      if (preg_match('/^\[([^\]]+)\]\[([^\]]+)\]$/', $target, $matches)) {
+        array_unshift($candidates, '#[' . $matches[1] . '][' . __('Aucun', __FILE__) . '][' . $matches[2] . ']#');
+      }
+      foreach ($candidates as $candidate) {
+        try {
+          $scenario = scenario::byString($candidate);
+          break;
+        } catch (Exception $e) {
+          $scenario = null;
+        }
+      }
+    }
+    if (!is_object($scenario)) {
+      throw new Exception(__('Scénario introuvable', __FILE__) . ' : ' . $_target);
+    }
+    return $scenario;
+  }
+
+  /**
+   * Exécute une action rapide pour un utilisateur Discord et renvoie le message à lui afficher
+   * @param array $_data buttonId, channelId, user, roles
+   * @return array ok, message
+   */
+  private static function runQuickAction($_data) {
+    $actions = self::getQuickActions();
+    $id = isset($_data['buttonId']) ? $_data['buttonId'] : '';
+    $userName = isset($_data['user']['name']) ? $_data['user']['name'] : '?';
+    if (!isset($actions[$id])) {
+      return array('ok' => false, 'message' => '⚠️ ' . __('Ce bouton n\'est plus valide', __FILE__));
+    }
+    $action = $actions[$id];
+    $eqLogic = self::byId($action['eqLogicId']);
+    if (!is_object($eqLogic) || $eqLogic->getIsEnable() != 1 || $eqLogic->getConfiguration('channelId', '') !== (string) (isset($_data['channelId']) ? $_data['channelId'] : '')) {
+      return array('ok' => false, 'message' => '⚠️ ' . __('Ce bouton n\'est plus valide', __FILE__));
+    }
+    if (!self::isRoleAllowed($action['roles'], isset($_data['roles']) ? $_data['roles'] : array())) {
+      log::add(__CLASS__, 'warning', __('Action rapide refusée', __FILE__) . ' « ' . $action['label'] . ' » : ' . $userName);
+      return array('ok' => false, 'message' => '⛔ ' . __('Vous n\'avez pas le droit d\'utiliser ce bouton', __FILE__));
+    }
+    log::add(__CLASS__, 'info', __('Action rapide', __FILE__) . ' « ' . $action['label'] . ' » (' . $action['type'] . ') ' . __('demandée par', __FILE__) . ' ' . $userName);
+    try {
+      switch ($action['type']) {
+        case 'cmd':
+          $cmd = cmd::byString($action['target']);
+          $cmd->execCmd();
+          return array('ok' => true, 'message' => '✅ ' . $action['label']);
+        case 'scenario':
+          $scenario = self::findScenario($action['target']);
+          $scenario->setTags(array('#jeediscord_user#' => $userName, '#jeediscord_channel#' => $_data['channelId']));
+          if ($scenario->launch() === false) {
+            return array('ok' => false, 'message' => '⚠️ ' . __('Le scénario est désactivé', __FILE__));
+          }
+          return array('ok' => true, 'message' => '✅ ' . $action['label']);
+        case 'interaction':
+          $reply = interactQuery::tryToReply($action['target'], array('plugin' => __CLASS__));
+          $text = is_array($reply) && isset($reply['reply']) ? trim((string) $reply['reply']) : '';
+          return array('ok' => true, 'message' => $text != '' ? $text : '✅ ' . $action['label']);
+      }
+    } catch (Throwable $e) {
+      log::add(__CLASS__, 'error', __('Action rapide en erreur', __FILE__) . ' « ' . $action['label'] . ' » : ' . $e->getMessage());
+      return array('ok' => false, 'message' => '❌ ' . __('Erreur lors de l\'exécution, consultez le log', __FILE__));
+    }
+    return array('ok' => false, 'message' => '⚠️ ' . __('Ce bouton n\'est plus valide', __FILE__));
+  }
+
+  /**
+   * Vérifie que l'utilisateur possède l'un des rôles autorisés (nom ou identifiant, séparés par des virgules).
+   * Une liste vide autorise tous les utilisateurs du salon.
+   * @param string $_allowed
+   * @param array $_userRoles tableaux id / name
+   * @return bool
+   */
+  public static function isRoleAllowed($_allowed, $_userRoles) {
+    $allowed = array_filter(array_map('trim', explode(',', (string) $_allowed)), 'strlen');
+    if (count($allowed) == 0) {
+      return true;
+    }
+    foreach ($allowed as $role) {
+      foreach ((array) $_userRoles as $userRole) {
+        if ((isset($userRole['id']) && (string) $userRole['id'] === $role) || (isset($userRole['name']) && mb_strtolower($userRole['name']) === mb_strtolower($role))) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   /**
@@ -485,6 +680,17 @@ class jeediscord extends eqLogic {
         ),
         'template' => array('scenario' => 'jeediscord::jeediscordFile'),
       ),
+      'sendQuickActions' => array(
+        'name' => __('Envoyer des actions rapides', __FILE__),
+        'type' => 'action',
+        'subType' => 'message',
+        'isVisible' => 0,
+        'display' => array(
+          'title_disable' => 1,
+          'message_placeholder' => __('Message', __FILE__),
+        ),
+        'template' => array('scenario' => 'jeediscord::jeediscordQuickActions'),
+      ),
       'lastMessage' => array(
         'name' => __('Dernier message', __FILE__),
         'type' => 'info',
@@ -646,6 +852,10 @@ class jeediscordCmd extends cmd {
     switch ($this->getLogicalId()) {
       case 'sendMessage':
         $title = trim(self::option($_options, 'title'));
+        // Un ask du core envoie la question à la fois comme titre et comme message
+        if ($title == trim(self::option($_options, 'message'))) {
+          $title = '';
+        }
         $params['content'] = ($title != '' ? '**' . $title . "**\n" : '') . self::option($_options, 'message');
         $params['files'] = self::normalizeFiles(isset($_options['files']) ? $_options['files'] : array());
         break;
@@ -675,8 +885,29 @@ class jeediscordCmd extends cmd {
           throw new Exception(__('Aucun fichier valide à envoyer', __FILE__));
         }
         break;
+      case 'sendQuickActions':
+        $params['content'] = self::option($_options, 'message');
+        $params['buttons'] = jeediscord::registerQuickActions($eqLogic->getId(), self::option($_options, 'buttons'));
+        if (count($params['buttons']) == 0) {
+          throw new Exception(__('Aucune action rapide valide à envoyer', __FILE__));
+        }
+        break;
       default:
         return;
+    }
+    // Question d'un scénario (action ask) : réponses proposées en boutons ou en menu déroulant, ou message libre
+    if (in_array($this->getLogicalId(), array('sendMessage', 'sendEmbed', 'sendFile')) && isset($_options['answer']) && is_array($_options['answer']) && self::option($_options, 'variable') != '') {
+      $params['ask'] = array(
+        'cmdId' => $this->getId(),
+        'answers' => array_values(array_filter(array_map('trim', $_options['answer']), 'strlen')),
+        'timeout' => isset($_options['timeout']) ? (int) $_options['timeout'] : 300,
+        'labels' => array(
+          'answered' => '> ✅ ' . __('Réponse de %user% : %answer%', __FILE__),
+          'timeout' => '> ⏱️ ' . __('Aucune réponse', __FILE__),
+          'choose' => __('Choisissez une réponse', __FILE__),
+          'hint' => '> ✍️ ' . __('Répondez en écrivant un message dans ce salon', __FILE__),
+        ),
+      );
     }
     $result = jeediscord::sendToDaemon('send', $params);
     if (is_array($result) && !empty($result['ignoredFiles'])) {

@@ -44,6 +44,8 @@ Après l'activation du plugin, installez les dépendances puis renseignez :
 
 Le **statut du bot** indique si le démon est démarré et connecté à Discord, avec le nom du bot, le nombre de serveurs et la latence. La modification de l'activité est appliquée immédiatement, sans redémarrer le démon. La saisie ou la modification du token démarre ou redémarre le démon (si la gestion automatique du démon est activée), et le statut se met à jour tout seul après la sauvegarde.
 
+![Configuration du plugin](../images/plugin_config.png)
+
 # Le démon
 
 Le démon est un programme Node.js unique qui maintient la connexion avec Discord. Il est conçu pour rester léger :
@@ -73,6 +75,8 @@ Un équipement correspond à **un salon Discord**.
 - **Salon** : liste des salons visibles par le bot, groupés par serveur. Elle est disponible quand le démon est connecté à Discord et se met à jour automatiquement quand un salon est créé, renommé ou supprimé. Le bouton d'actualisation force la mise à jour. La mention « droits insuffisants » signale un salon où le bot ne peut pas envoyer de messages.
 - **Couleur des embeds** : couleur de la bordure des messages enrichis envoyés dans ce salon, utilisée quand le scénario n'en précise pas.
 
+![Équipement](../images/device_config.png)
+
 # Commandes
 
 Chaque équipement dispose des commandes suivantes, utilisables dans les scénarios :
@@ -82,6 +86,7 @@ Chaque équipement dispose des commandes suivantes, utilisables dans les scénar
 | Envoyer un message | action / message | Envoie un texte. Le titre, s'il est renseigné, est affiché en gras sur la première ligne. |
 | Envoyer un embed | action / message | Envoie un message enrichi (titre, lien, description, champs, image, couleur, pied de page, horodatage). |
 | Envoyer un fichier | action / message | Envoie un ou plusieurs fichiers, avec un texte optionnel. |
+| Envoyer des actions rapides | action / message | Envoie un message sous lequel se trouvent des boutons qui lancent une commande, un scénario ou une interaction Jeedom. |
 | Dernier message | info / autre | Contenu du dernier message reçu dans le salon. |
 | Auteur du dernier message | info / autre | Nom affiché de son auteur (surnom sur le serveur, sinon nom d'affichage). |
 | Identifiant de l'auteur du dernier message | info / autre | Identifiant Discord de l'auteur, fiable pour les conditions de scénario (un nom peut changer). |
@@ -89,6 +94,12 @@ Chaque équipement dispose des commandes suivantes, utilisables dans les scénar
 | Dernière réaction | info / autre | Emoji de la dernière réaction ajoutée ou retirée. |
 | Auteur de la dernière réaction | info / autre | Nom affiché de la personne qui a réagi. |
 | Dernière réaction ajoutée | info / binaire | 1 si la réaction a été ajoutée, 0 si elle a été retirée. |
+
+![Onglet Commandes](../images/device_commands.png)
+
+Les commandes d'envoi sont utilisées dans les **actions des scénarios** : choisissez la commande dans la liste, le formulaire correspondant s'affiche. Les commandes « Envoyer un embed », « Envoyer un fichier » et « Envoyer des actions rapides » sont masquées du dashboard, ce qui n'empêche pas de les utiliser dans les scénarios.
+
+![Actions JeeDiscord dans un scénario : message, embed, fichier, question](../images/scenario_actions.png)
 
 ## Envoyer un message
 
@@ -114,6 +125,44 @@ Les textes trop longs sont raccourcis pour respecter les limites de Discord (600
 Indiquez le chemin complet d'un fichier par ligne. Discord accepte 10 fichiers par message : au-delà, plusieurs messages sont envoyés. La taille maximale d'un fichier dépend du niveau de boost du serveur (10 Mo sans boost, 50 Mo au niveau 2, 100 Mo au niveau 3). Les fichiers trop volumineux sont ignorés et signalés dans le log.
 
 Par sécurité, les fichiers de configuration de Jeedom (`core/config`), les dossiers système (`/etc`, `/root`...) et les fichiers ou dossiers cachés ne peuvent pas être envoyés.
+
+## Poser une question (action « Demander » des scénarios)
+
+Les commandes « Envoyer un message », « Envoyer un embed » et « Envoyer un fichier » peuvent être choisies dans l'action **Demander** d'un scénario (le champ « Commande » de l'action).
+
+- **Avec des réponses possibles** (par exemple `Oui;Non`) : un bouton par réponse est affiché sous la question. Au-delà de 10 réponses, un menu déroulant les remplace (25 réponses au maximum).
+- **Sans réponse imposée** (`*`) : aucun bouton n'est affiché ; la question indique de répondre en écrivant un message, et le prochain message écrit dans le salon est la réponse.
+
+Dès qu'une réponse est donnée, ou à la fin du délai, les boutons sont désactivés et le message indique qui a répondu et quoi (ou « Aucune réponse »). La réponse est enregistrée dans la variable du scénario, comme avec les autres plugins de messagerie. N'importe quelle personne pouvant écrire dans le salon peut répondre.
+
+Une question reste valable tant que le délai n'est pas écoulé et que le démon n'est pas redémarré : après un redémarrage, ses boutons sont simplement désactivés au prochain clic.
+
+## Actions rapides
+
+La commande « Envoyer des actions rapides » envoie un message avec des boutons **qui restent actifs** (même après un redémarrage du démon). Elle s'utilise dans un scénario : ajoutez une action, puis choisissez **[Objet][Équipement][Envoyer des actions rapides]** dans la liste des commandes. Renseignez :
+
+- **Message** : le texte affiché au-dessus des boutons ;
+- **Boutons** : un bouton par ligne, au format `Libellé | type | cible | rôles autorisés | couleur`.
+
+| Champ | Contenu |
+|---|---|
+| Libellé | Texte du bouton. |
+| Type | `cmd` (commande action), `scenario` ou `interaction`. |
+| Cible | La commande (`#[Objet][Équipement][Commande]#`), le scénario (identifiant, ou nom complet `[Groupe][Objet][Nom]` avec `Aucun` si le scénario n'a pas d'objet, par exemple `[Jardin][Aucun][Arrosage]` ; `[Jardin][Arrosage]` est aussi accepté) ou la phrase de l'interaction. |
+| Rôles autorisés | Facultatif : noms ou identifiants de rôles Discord séparés par des virgules. Vide = toute personne du salon. |
+| Couleur | Facultatif : `primary` (bleu, par défaut), `secondary`, `success` ou `danger`. |
+
+Exemple :
+
+```
+Allumer le salon | cmd | #[Salon][Lampe][On]# | Famille | success
+Lancer l'arrosage | scenario | [Jardin][Aucun][Arrosage] | Famille, Admin
+Température ? | interaction | quelle est la température du salon
+```
+
+Le résultat de l'action est affiché uniquement à la personne qui a cliqué (✅ exécuté, ⛔ rôle non autorisé, ❌ erreur : la cause est alors dans le log `jeediscord`, ⚠️ bouton qui n'est plus valide, par exemple parce que l'équipement a été désactivé ou déplacé dans un autre salon). Pour une interaction, la réponse de l'interaction est affichée. Le bouton ▶ à droite du champ « Boutons » insère un scénario choisi dans la liste, le bouton à côté insère une commande action. Un scénario lancé par un bouton reçoit les tags `#jeediscord_user#` (nom de la personne) et `#jeediscord_channel#` (identifiant du salon). Maximum : 25 boutons par message.
+
+![Formulaire des actions rapides](../images/scenario_quick_actions.png)
 
 ## Mentions
 

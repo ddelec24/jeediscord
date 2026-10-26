@@ -26,9 +26,10 @@ try {
     die();
   }
   log::add('jeediscord', 'debug', '[CALLBACK] ' . (isset($data['event']) ? $data['event'] : '?'));
-  jeediscord::handleDaemonEvent($data);
-  echo 'OK';
-} catch (Exception $e) {
-  log::add('jeediscord', 'error', displayException($e));
-  echo 'OK';
+  $result = jeediscord::handleDaemonEvent($data);
+  // Certains événements attendent une réponse de Jeedom (actions rapides) : elle est renvoyée en JSON
+  echo is_array($result) ? json_encode($result) : 'OK';
+} catch (Throwable $e) {
+  log::add('jeediscord', 'error', $e->getMessage() . ' (' . basename($e->getFile()) . ':' . $e->getLine() . ')');
+  echo (isset($data['event']) && $data['event'] == 'quickAction') ? json_encode(array('ok' => false, 'message' => '❌ ' . __('Erreur lors de l\'exécution, consultez le log', __FILE__))) : 'OK';
 }

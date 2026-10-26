@@ -17,6 +17,7 @@ const log = require('./lib/logger');
 const jeedom = require('./lib/jeedom');
 const { KeyedQueue } = require('./lib/queue');
 const sender = require('./lib/sender');
+const interactions = require('./lib/interactions');
 
 const args = jeedom.getArgs();
 log.setLevel(args.loglevel || 'error');
@@ -209,6 +210,7 @@ function createClient() {
 
   /* ---------- Messages et réactions reçus ---------- */
   discordClient.on(Events.MessageCreate, onMessage);
+  discordClient.on(Events.InteractionCreate, (interaction) => interactions.onInteraction(interaction, { callback, name: (i) => displayName(i.user, i.member) }));
   const reactionError = (error) => log.error('[RECEIVE] Réaction non traitée : ' + error.message);
   discordClient.on(Events.MessageReactionAdd, (reaction, user) => onReaction(reaction, user, true).catch(reactionError));
   discordClient.on(Events.MessageReactionRemove, (reaction, user) => onReaction(reaction, user, false).catch(reactionError));
@@ -246,6 +248,7 @@ function onMessage(_message) {
     attachments: _message.attachments.map((a) => ({ name: a.name, url: a.url, contentType: a.contentType, size: a.size })),
     replyTo: _message.reference ? _message.reference.messageId : null,
   };
+  interactions.handleTextAnswer(_message, (event, payload) => callback.send(event, payload), (m) => displayName(m.author, m.member));
   log.info('[RECEIVE] Message de ' + data.author.name + ' dans #' + (_message.channel.name || _message.channelId) + ' (' + data.content.length + ' caractères, ' + data.attachments.length + ' pièce(s) jointe(s))');
   callback.send('message', data);
 }
@@ -384,14 +387,31 @@ const actions = {
       paths.unshift(embedParams.image);
       delete embedParams.image;
     }
+    // Question de scénario (boutons, menu) ou actions rapides : composants joints au dernier message
+    let components = [];
+    let ask = null;
+    let askAnswers = [];
+    if (_params.ask && typeof _params.ask === 'object') {
+      ask = _params.ask;
+      const prepared = interactions.prepareAsk(ask);
+      askAnswers = prepared.answers;
+      components = prepared.components;
+    } else if (Array.isArray(_params.buttons) && _params.buttons.length > 0) {
+      components = interactions.buildQuickComponents(_params.buttons);
+    }
     checkPermissions(channel, { embed: Boolean(embedParams), files: paths.length > 0 });
     const { files, errors } = sender.loadFiles(paths, sender.getUploadLimit(channel.guild));
     const hasContent = String(_params.content ?? '').trim() !== '';
-    if (!hasContent && !embedParams && files.length === 0) {
+    if (!hasContent && !embedParams && files.length === 0 && components.length === 0) {
       throw new ActionError(errors.length > 0 ? 'No valid file: ' + errors.join(', ') : 'Nothing to send');
     }
     queue.push(channel.id, async () => {
-      const content = await sender.resolveMentions(_params.content, channel.guild);
+      let text = _params.content;
+      // Question libre : on indique comment répondre
+      if (ask && askAnswers.length === 0 && ask.labels && ask.labels.hint) {
+        text = String(text ?? '') + '\n\n' + ask.labels.hint;
+      }
+      const content = await sender.resolveMentions(text, channel.guild);
       let embed = null;
       if (embedParams) {
         for (const key of ['title', 'description', 'footer']) {
@@ -400,10 +420,17 @@ const actions = {
         embed = sender.buildEmbed(embedParams, files, sender.parseColor(_params.defaultColor));
       }
       const payloads = sender.buildPayloads({ content, embed, files });
+      if (components.length > 0) {
+        payloads[payloads.length - 1].components = components;
+      }
       const ids = [];
+      let lastMessage = null;
       for (const payload of payloads) {
-        const message = await channel.send(payload);
-        ids.push(message.id);
+        lastMessage = await channel.send(payload);
+        ids.push(lastMessage.id);
+      }
+      if (ask && lastMessage) {
+        interactions.registerAsk(lastMessage, ask, askAnswers, client);
       }
       return ids;
     }, { label: 'send' }).then((ids) => {
@@ -478,6 +505,7 @@ async function shutdown(_code = 0) {
     if (server) {
       server.close();
     }
+    interactions.clearAll();
     if (client) {
       await client.destroy();
     }

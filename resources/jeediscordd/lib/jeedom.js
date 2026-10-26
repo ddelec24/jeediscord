@@ -20,6 +20,7 @@ const log = require('./logger');
 
 const MAX_BODY_SIZE = 1024 * 1024; // les fichiers sont transmis par chemin, pas dans le corps
 const CALLBACK_TIMEOUT = 15000;
+const REQUEST_TIMEOUT = 30000;
 const CALLBACK_MAX_PENDING = 500;
 
 /**
@@ -126,6 +127,29 @@ class Callback {
       } catch (error) {
         log.error('[JEEDOM] Erreur d\'envoi vers Jeedom (' + payload.event + ') : ' + error.message);
       }
+    }
+  }
+
+  /**
+   * Envoie un événement et attend la réponse JSON de Jeedom (hors file d'événements : l'utilisateur Discord attend)
+   * @param {string} _event nom de l'événement
+   * @param {object} [_data] contenu
+   * @returns {Promise<object>} réponse de Jeedom
+   */
+  async request(_event, _data = {}) {
+    const json = JSON.stringify({ event: _event, ..._data });
+    log.debug('[JEEDOM] => ' + json);
+    const response = await fetch(this.url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ apikey: this.apikey, data: json }),
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT),
+    });
+    const text = (await response.text()).trim();
+    try {
+      return JSON.parse(text);
+    } catch (error) {
+      throw new Error('Unexpected response from Jeedom (' + response.status + '): ' + text.substring(0, 200));
     }
   }
 
