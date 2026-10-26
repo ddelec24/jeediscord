@@ -1,0 +1,48 @@
+{
+	"id": "jeediscord",
+	"name": "JeeDiscord",
+	"pluginVersion": "0.1",
+	"description": {
+		"fr_FR": "Pilotez et suivez Jeedom depuis Discord : envoi de messages, embeds et fichiers, questions (ask) avec boutons, actions rapides, réactions emoji, commandes slash, résumés et renommage de salons. Basé sur discord.js v14 (API Discord v10).",
+		"en_US": "Control and monitor Jeedom from Discord: send messages, embeds and files, ask questions with buttons, quick actions, emoji reactions, slash commands, summaries and channel renaming. Based on discord.js v14 (Discord API v10).",
+		"es_ES": "Controle y supervise Jeedom desde Discord: envío de mensajes, embeds y archivos, preguntas (ask) con botones, acciones rápidas, reacciones emoji, comandos slash, resúmenes y cambio de nombre de canales. Basado en discord.js v14 (API Discord v10).",
+		"de_DE": "Steuern und überwachen Sie Jeedom über Discord: Nachrichten, Embeds und Dateien senden, Fragen (Ask) mit Schaltflächen, Schnellaktionen, Emoji-Reaktionen, Slash-Befehle, Zusammenfassungen und Umbenennen von Kanälen. Basiert auf discord.js v14 (Discord-API v10).",
+		"it_IT": "Controlla e monitora Jeedom da Discord: invio di messaggi, embed e file, domande (ask) con pulsanti, azioni rapide, reazioni emoji, comandi slash, riepiloghi e rinomina dei canali. Basato su discord.js v14 (API Discord v10).",
+		"pt_PT": "Controle e acompanhe o Jeedom a partir do Discord: envio de mensagens, embeds e ficheiros, perguntas (ask) com botões, ações rápidas, reações emoji, comandos slash, resumos e mudança de nome de canais. Baseado em discord.js v14 (API Discord v10).",
+		"ru_RU": "Управляйте Jeedom и следите за ним из Discord: отправка сообщений, embed-блоков и файлов, вопросы (ask) с кнопками, быстрые действия, реакции эмодзи, slash-команды, сводки и переименование каналов. Основан на discord.js v14 (Discord API v10)."
+	},
+	"utilization": "Créez une application et un bot sur le portail développeur Discord, renseignez son token dans la configuration du plugin, installez les dépendances puis démarrez le démon. Chaque équipement correspond à un salon Discord.",
+	"licence": "MIT",
+	"author": "ddelec24",
+	"require": "4.4",
+	"os": {
+		"min": 12,
+		"max": ""
+	},
+	"category": "communication",
+	"hasDependency": true,
+	"hasOwnDeamon": true,
+	"maxDependancyInstallTime": 15,
+	"changelog": "https://doc.jeedom.com/#language#/plugins/communication/jeediscord/changelog",
+	"documentation": "https://doc.jeedom.com/#language#/plugins/communication/jeediscord/",
+	"changelog_beta": "https://doc.jeedom.com/#language#/plugins/communication/jeediscord/beta/changelog",
+	"documentation_beta": "https://doc.jeedom.com/#language#/plugins/communication/jeediscord/beta/",
+	"language": [
+		"fr_FR",
+		"en_US",
+		"es_ES",
+		"de_DE",
+		"it_IT",
+		"pt_PT",
+		"ru_RU"
+	],
+	"compatibility": [
+		"smart",
+		"luna",
+		"atlas",
+		"rpi",
+		"docker",
+		"diy",
+		"v4"
+	]
+}

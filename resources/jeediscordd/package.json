@@ -1,0 +1,14 @@
+{
+  "name": "jeediscordd",
+  "version": "0.1.0",
+  "description": "Jeedom JeeDiscord plugin daemon",
+  "main": "jeediscordd.js",
+  "private": true,
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "discord.js": "~14.27.0"
+  }
+}
