@@ -89,6 +89,8 @@ Chaque équipement dispose des commandes suivantes, utilisables dans les scénar
 | Envoyer un fichier | action / message | Envoie un ou plusieurs fichiers, avec un texte optionnel. |
 | Modifier le dernier message envoyé | action / message | Remplace le texte du dernier message envoyé par le bot dans le salon. |
 | Supprimer le dernier message envoyé | action / autre | Supprime le dernier message envoyé par le bot dans le salon (toutes ses parties s'il a été découpé). |
+| Renommer le salon | action / message | Change le nom du salon. |
+| Modifier le sujet du salon | action / message | Change le sujet (la description affichée en haut) d'un salon textuel. |
 | Nettoyer le salon | action / message | Supprime les messages plus anciens qu'un âge donné. |
 | Envoyer des actions rapides | action / message | Envoie un message sous lequel se trouvent des boutons qui lancent une commande, un scénario ou une interaction Jeedom. |
 | Dernier message | info / autre | Contenu du dernier message reçu dans le salon. |
@@ -147,6 +149,14 @@ Les commandes « Modifier le dernier message envoyé » et « Supprimer le derni
 
 - La modification remplace le **texte** du message ; les embeds, fichiers et boutons sont conservés. Les mentions `@{pseudo}` sont résolues comme à l'envoi.
 - Le dernier message est mémorisé par le démon : après un redémarrage du démon, il n'y a plus de message à modifier ou supprimer jusqu'au prochain envoi (une erreur est alors inscrite dans le log).
+
+## Renommer un salon, modifier son sujet
+
+Les commandes « Renommer le salon » et « Modifier le sujet du salon » changent le nom et le sujet du salon de l'équipement. Le bot doit avoir le droit **Gérer les salons** (ou le rôle administrateur).
+
+- Un salon **textuel** est toujours en minuscules, avec des tirets à la place des espaces (« Ma Maison » devient `ma-maison`) : c'est la règle de Discord.
+- Un salon **vocal** accepte les espaces, les majuscules et les emojis. Il peut donc servir d'**afficheur** : créez un équipement lié à un salon vocal, et mettez à jour son nom depuis un scénario, par exemple `🌡️ Salon : #[Salon][Sonde][Température]# °C`. Le nom est limité à 100 caractères, le sujet à 1024 (et seuls les salons textuels ont un sujet).
+- **Discord limite ces changements à 2 toutes les 10 minutes par salon.** Pour ne pas bloquer, les demandes qui arrivent pendant l'attente sont fusionnées : seule la dernière valeur est envoyée. Rien n'est envoyé non plus quand le nom ou le sujet est déjà celui du salon. N'appelez donc pas ces commandes à chaque variation rapide d'une valeur : l'affichage sera simplement en retard de quelques minutes.
 
 ## Nettoyer un salon
 

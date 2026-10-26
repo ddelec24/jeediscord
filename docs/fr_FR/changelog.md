@@ -19,4 +19,5 @@
 - Documentation : captures d'écran de la configuration, de l'équipement, des commandes et des formulaires de scénario
 - Commandes « Modifier le dernier message envoyé » et « Supprimer le dernier message envoyé »
 - Commande « Nettoyer le salon » (âge, messages du bot ou tous) et nettoyage automatique horaire selon la durée de conservation de l'équipement ; suppression en masse sous 14 jours, une par une au-delà
+- Commandes « Renommer le salon » et « Modifier le sujet du salon » (salon vocal utilisable comme afficheur), avec fusion des demandes et prise en compte de la limite de Discord (2 changements toutes les 10 minutes)
 - Réception des messages (contenu, auteur, pièces jointes) et des réactions (emoji, auteur, ajout ou retrait)

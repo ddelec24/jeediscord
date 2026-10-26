@@ -35,6 +35,8 @@ const ACTIVITY_TYPES = {
 };
 const CHANNELS_DEBOUNCE = 3000;
 const SHUTDOWN_TIMEOUT = 5000;
+const CHANNEL_NAME_MAX = 100;
+const CHANNEL_TOPIC_MAX = 1024;
 const LOGIN_RETRY_BASE = 15; // secondes
 const LOGIN_RETRY_MAX = 300; // secondes
 
@@ -527,6 +529,65 @@ const actions = {
       .catch((error) => reportError('PurgeError', 'Nettoyage impossible dans #' + channel.name, error, _params.eqLogicId));
     return { queued: true };
   },
+
+  /**
+   * Renomme un salon (texte, annonces ou vocal). Discord limite le renommage à 2 changements toutes les 10 minutes
+   * par salon : les demandes en attente sont fusionnées (seule la dernière valeur est envoyée) et rien n'est envoyé
+   * si le nom est déjà celui du salon.
+   * @param {object} _params channelId, name, eqLogicId
+   */
+  async setChannelName(_params) {
+    requireReady();
+    const channel = await getGuildChannel(_params.channelId);
+    const voice = channel.type === ChannelType.GuildVoice;
+    let name = String(_params.name ?? '').replace(/[\r\n]+/g, ' ').trim();
+    // Les salons textuels sont en minuscules, sans espaces ; les salons vocaux acceptent espaces et majuscules
+    if (!voice) {
+      name = name.toLowerCase().replace(/\s+/g, '-');
+    }
+    if (name === '') {
+      throw new ActionError('Empty channel name');
+    }
+    name = sender.truncate(name, CHANNEL_NAME_MAX);
+    checkManageChannel(channel);
+    queue.push('settings:' + channel.id, async () => {
+      if (channel.name === name) {
+        log.debug('[CHANNEL] #' + channel.name + ' : nom identique, aucune requête');
+        return;
+      }
+      await channel.setName(name, 'JeeDiscord');
+      log.info('[CHANNEL] Salon renommé en « ' + name + ' »');
+    }, { label: 'setName', coalesce: 'name' })
+      .catch((error) => reportError('RenameError', 'Renommage impossible de #' + channel.name, error, _params.eqLogicId));
+    return { queued: true, name };
+  },
+
+  /**
+   * Modifie le sujet d'un salon textuel (même limite de débit que le nom, mêmes fusions)
+   * @param {object} _params channelId, topic, eqLogicId
+   */
+  async setChannelTopic(_params) {
+    requireReady();
+    const channel = await getGuildChannel(_params.channelId);
+    if (![ChannelType.GuildText, ChannelType.GuildAnnouncement].includes(channel.type)) {
+      throw new ActionError('Only text channels have a topic');
+    }
+    const topic = sender.truncate(String(_params.topic ?? '').trim(), CHANNEL_TOPIC_MAX);
+    if (topic === '') {
+      throw new ActionError('Empty channel topic');
+    }
+    checkManageChannel(channel);
+    queue.push('settings:' + channel.id, async () => {
+      if (channel.topic === topic) {
+        log.debug('[CHANNEL] #' + channel.name + ' : sujet identique, aucune requête');
+        return;
+      }
+      await channel.setTopic(topic, 'JeeDiscord');
+      log.info('[CHANNEL] Sujet de #' + channel.name + ' modifié');
+    }, { label: 'setTopic', coalesce: 'topic' })
+      .catch((error) => reportError('TopicError', 'Modification du sujet impossible de #' + channel.name, error, _params.eqLogicId));
+    return { queued: true };
+  },
 };
 
 /**
@@ -556,6 +617,36 @@ async function getTextChannel(_channelId) {
     throw new ActionError('Channel is not a text channel: ' + _channelId);
   }
   return channel;
+}
+
+/**
+ * Salon du serveur (texte, annonces ou vocal) à partir de son identifiant
+ * @param {string} _channelId
+ */
+async function getGuildChannel(_channelId) {
+  if (!/^[0-9]{17,20}$/.test(String(_channelId ?? ''))) {
+    throw new ActionError('Invalid channel ID');
+  }
+  let channel;
+  try {
+    channel = await client.channels.fetch(_channelId);
+  } catch (error) {
+    throw new ActionError('Channel not found or not visible by the bot: ' + _channelId, 404);
+  }
+  if (!channel || !channel.guild || !CHANNEL_TYPES.includes(channel.type)) {
+    throw new ActionError('Unsupported channel: ' + _channelId);
+  }
+  return channel;
+}
+
+/**
+ * Vérifie le droit « Gérer les salons » avant de modifier un salon
+ */
+function checkManageChannel(_channel) {
+  const permissions = _channel.permissionsFor(_channel.guild.members.me);
+  if (!permissions || !permissions.has(PermissionFlagsBits.ManageChannels)) {
+    throw new ActionError('Missing permissions in #' + _channel.name + ': Manage Channels', 403);
+  }
 }
 
 /**

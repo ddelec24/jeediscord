@@ -740,6 +740,26 @@ class jeediscord extends eqLogic {
         'subType' => 'other',
         'isVisible' => 0,
       ),
+      'setChannelName' => array(
+        'name' => __('Renommer le salon', __FILE__),
+        'type' => 'action',
+        'subType' => 'message',
+        'isVisible' => 0,
+        'display' => array(
+          'title_disable' => 1,
+          'message_placeholder' => __('Nouveau nom', __FILE__),
+        ),
+      ),
+      'setChannelTopic' => array(
+        'name' => __('Modifier le sujet du salon', __FILE__),
+        'type' => 'action',
+        'subType' => 'message',
+        'isVisible' => 0,
+        'display' => array(
+          'title_disable' => 1,
+          'message_placeholder' => __('Nouveau sujet', __FILE__),
+        ),
+      ),
       'cleanChannel' => array(
         'name' => __('Nettoyer le salon', __FILE__),
         'type' => 'action',
@@ -952,6 +972,20 @@ class jeediscordCmd extends cmd {
           throw new Exception(__('Le nouveau texte est vide', __FILE__));
         }
         jeediscord::sendToDaemon('editLast', $params);
+        return;
+      case 'setChannelName':
+        $name = trim(self::option($_options, 'message'));
+        if ($name == '') {
+          throw new Exception(__('Le nouveau nom est vide', __FILE__));
+        }
+        jeediscord::sendToDaemon('setChannelName', array('eqLogicId' => $eqLogic->getId(), 'channelId' => $channelId, 'name' => $name));
+        return;
+      case 'setChannelTopic':
+        $topic = trim(self::option($_options, 'message'));
+        if ($topic == '') {
+          throw new Exception(__('Le nouveau sujet est vide', __FILE__));
+        }
+        jeediscord::sendToDaemon('setChannelTopic', array('eqLogicId' => $eqLogic->getId(), 'channelId' => $channelId, 'topic' => $topic));
         return;
       case 'deleteLastMessage':
         jeediscord::sendToDaemon('deleteLast', $params);
