@@ -273,6 +273,9 @@ class jeediscord extends eqLogic {
       case 'askAnswer':
         self::onAskAnswer($_data);
         break;
+      case 'purged':
+        log::add(__CLASS__, 'info', __('Nettoyage du salon', __FILE__) . ' : ' . (isset($_data['deleted']) ? (int) $_data['deleted'] : 0) . ' ' . __('message(s) supprimé(s)', __FILE__) . (!empty($_data['pending']) ? ' (' . __('suite au prochain passage', __FILE__) . ')' : ''));
+        break;
       case 'quickAction':
         return self::runQuickAction($_data);
       case 'status':
@@ -290,6 +293,34 @@ class jeediscord extends eqLogic {
         log::add(__CLASS__, 'debug', __('Événement inconnu reçu du démon', __FILE__) . ' : ' . $event);
     }
     return $return;
+  }
+
+  /**
+   * Nettoyage automatique des salons dont l'équipement définit une durée de conservation
+   */
+  public static function cronHourly() {
+    if (self::deamon_info()['state'] != 'ok') {
+      return;
+    }
+    $done = array();
+    foreach (self::byType(__CLASS__, true) as $eqLogic) {
+      $days = (int) $eqLogic->getConfiguration('retentionDays', 0);
+      $channelId = $eqLogic->getConfiguration('channelId', '');
+      if ($days <= 0 || $channelId == '' || isset($done[$channelId])) {
+        continue;
+      }
+      $done[$channelId] = true;
+      try {
+        self::sendToDaemon('purge', array(
+          'eqLogicId' => $eqLogic->getId(),
+          'channelId' => $channelId,
+          'maxAge' => $days * 86400,
+          'scope' => $eqLogic->getConfiguration('retentionScope', 'bot') == 'all' ? 'all' : 'bot',
+        ));
+      } catch (Exception $e) {
+        log::add(__CLASS__, 'warning', $eqLogic->getHumanName() . ' : ' . __('nettoyage automatique impossible', __FILE__) . ' : ' . $e->getMessage());
+      }
+    }
   }
 
   /**
@@ -629,6 +660,8 @@ class jeediscord extends eqLogic {
       throw new Exception(__('L\'identifiant du salon Discord est invalide (17 à 20 chiffres attendus)', __FILE__));
     }
     $this->setConfiguration('channelId', $channelId);
+    $this->setConfiguration('retentionDays', max(0, min(3650, (int) $this->getConfiguration('retentionDays', 0))));
+    $this->setConfiguration('retentionScope', $this->getConfiguration('retentionScope', 'bot') == 'all' ? 'all' : 'bot');
   }
 
   // Fonction exécutée automatiquement après la sauvegarde (création ou mise à jour) de l'équipement
@@ -690,6 +723,33 @@ class jeediscord extends eqLogic {
           'message_placeholder' => __('Message', __FILE__),
         ),
         'template' => array('scenario' => 'jeediscord::jeediscordQuickActions'),
+      ),
+      'editLastMessage' => array(
+        'name' => __('Modifier le dernier message envoyé', __FILE__),
+        'type' => 'action',
+        'subType' => 'message',
+        'isVisible' => 0,
+        'display' => array(
+          'title_disable' => 1,
+          'message_placeholder' => __('Nouveau texte', __FILE__),
+        ),
+      ),
+      'deleteLastMessage' => array(
+        'name' => __('Supprimer le dernier message envoyé', __FILE__),
+        'type' => 'action',
+        'subType' => 'other',
+        'isVisible' => 0,
+      ),
+      'cleanChannel' => array(
+        'name' => __('Nettoyer le salon', __FILE__),
+        'type' => 'action',
+        'subType' => 'message',
+        'isVisible' => 0,
+        'display' => array(
+          'title_disable' => 1,
+          'message_disable' => 1,
+        ),
+        'template' => array('scenario' => 'jeediscord::jeediscordClean'),
       ),
       'lastMessage' => array(
         'name' => __('Dernier message', __FILE__),
@@ -885,6 +945,27 @@ class jeediscordCmd extends cmd {
           throw new Exception(__('Aucun fichier valide à envoyer', __FILE__));
         }
         break;
+      case 'editLastMessage':
+        $title = trim(self::option($_options, 'title'));
+        $params['content'] = ($title != '' ? '**' . $title . "**\n" : '') . self::option($_options, 'message');
+        if (trim($params['content']) == '') {
+          throw new Exception(__('Le nouveau texte est vide', __FILE__));
+        }
+        jeediscord::sendToDaemon('editLast', $params);
+        return;
+      case 'deleteLastMessage':
+        jeediscord::sendToDaemon('deleteLast', $params);
+        return;
+      case 'cleanChannel':
+        $age = max(0, (float) str_replace(',', '.', self::option($_options, 'age')));
+        $seconds = (int) round($age * (self::option($_options, 'unit') == 'days' ? 86400 : 3600));
+        jeediscord::sendToDaemon('purge', array(
+          'eqLogicId' => $eqLogic->getId(),
+          'channelId' => $channelId,
+          'maxAge' => $seconds,
+          'scope' => self::option($_options, 'scope') == 'all' ? 'all' : 'bot',
+        ));
+        return;
       case 'sendQuickActions':
         $params['content'] = self::option($_options, 'message');
         $params['buttons'] = jeediscord::registerQuickActions($eqLogic->getId(), self::option($_options, 'buttons'));

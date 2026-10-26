@@ -152,6 +152,25 @@ $eqLogics = eqLogic::byType($plugin->getId());
 									<input type="color" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="embedColor">
 								</div>
 							</div>
+							<legend><i class="fas fa-broom"></i> {{Nettoyage automatique}}</legend>
+							<div class="form-group">
+								<label class="col-sm-4 control-label">{{Conserver les messages}}
+									<sup><i class="fas fa-question-circle tooltips" title="{{Nombre de jours pendant lesquels les messages du salon sont conservés. Les plus anciens sont supprimés automatiquement, une fois par heure. 0 : aucun nettoyage}}"></i></sup>
+								</label>
+								<div class="col-sm-2">
+									<input type="number" min="0" max="3650" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="retentionDays" placeholder="0">
+								</div>
+								<div class="col-sm-1"><span class="form-control-static">{{jours}}</span></div>
+							</div>
+							<div class="form-group">
+								<label class="col-sm-4 control-label">{{Messages concernés}}</label>
+								<div class="col-sm-6">
+									<select class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="retentionScope">
+										<option value="bot">{{Uniquement ceux du bot}}</option>
+										<option value="all">{{Tous les messages (droit « Gérer les messages » requis)}}</option>
+									</select>
+								</div>
+							</div>
 						</div>
 
 						<!-- Partie droite de l'onglet "Équipement" -->

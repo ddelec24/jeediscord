@@ -74,6 +74,7 @@ Un équipement correspond à **un salon Discord**.
 
 - **Salon** : liste des salons visibles par le bot, groupés par serveur. Elle est disponible quand le démon est connecté à Discord et se met à jour automatiquement quand un salon est créé, renommé ou supprimé. Le bouton d'actualisation force la mise à jour. La mention « droits insuffisants » signale un salon où le bot ne peut pas envoyer de messages.
 - **Couleur des embeds** : couleur de la bordure des messages enrichis envoyés dans ce salon, utilisée quand le scénario n'en précise pas.
+- **Nettoyage automatique** : nombre de jours pendant lesquels les messages du salon sont conservés (0 : aucun nettoyage). Les plus anciens sont supprimés automatiquement, une fois par heure, soit uniquement ceux du bot, soit tous les messages (le bot doit alors avoir le droit « Gérer les messages »). Voir « Nettoyer un salon ».
 
 ![Équipement](../images/device_config.png)
 
@@ -86,6 +87,9 @@ Chaque équipement dispose des commandes suivantes, utilisables dans les scénar
 | Envoyer un message | action / message | Envoie un texte. Le titre, s'il est renseigné, est affiché en gras sur la première ligne. |
 | Envoyer un embed | action / message | Envoie un message enrichi (titre, lien, description, champs, image, couleur, pied de page, horodatage). |
 | Envoyer un fichier | action / message | Envoie un ou plusieurs fichiers, avec un texte optionnel. |
+| Modifier le dernier message envoyé | action / message | Remplace le texte du dernier message envoyé par le bot dans le salon. |
+| Supprimer le dernier message envoyé | action / autre | Supprime le dernier message envoyé par le bot dans le salon (toutes ses parties s'il a été découpé). |
+| Nettoyer le salon | action / message | Supprime les messages plus anciens qu'un âge donné. |
 | Envoyer des actions rapides | action / message | Envoie un message sous lequel se trouvent des boutons qui lancent une commande, un scénario ou une interaction Jeedom. |
 | Dernier message | info / autre | Contenu du dernier message reçu dans le salon. |
 | Auteur du dernier message | info / autre | Nom affiché de son auteur (surnom sur le serveur, sinon nom d'affichage). |
@@ -136,6 +140,19 @@ Les commandes « Envoyer un message », « Envoyer un embed » et « Envoyer un 
 Dès qu'une réponse est donnée, ou à la fin du délai, les boutons sont désactivés et le message indique qui a répondu et quoi (ou « Aucune réponse »). La réponse est enregistrée dans la variable du scénario, comme avec les autres plugins de messagerie. N'importe quelle personne pouvant écrire dans le salon peut répondre.
 
 Une question reste valable tant que le délai n'est pas écoulé et que le démon n'est pas redémarré : après un redémarrage, ses boutons sont simplement désactivés au prochain clic.
+
+## Modifier ou supprimer le dernier message
+
+Les commandes « Modifier le dernier message envoyé » et « Supprimer le dernier message envoyé » agissent sur le **dernier envoi du bot dans le salon** (message, embed, fichier, question ou actions rapides), y compris quand un long texte a été découpé en plusieurs messages (la modification porte sur la dernière partie, la suppression sur toutes). Elles sont exécutées après les envois déjà en attente : un scénario peut donc envoyer puis modifier ou supprimer aussitôt.
+
+- La modification remplace le **texte** du message ; les embeds, fichiers et boutons sont conservés. Les mentions `@{pseudo}` sont résolues comme à l'envoi.
+- Le dernier message est mémorisé par le démon : après un redémarrage du démon, il n'y a plus de message à modifier ou supprimer jusqu'au prochain envoi (une erreur est alors inscrite dans le log).
+
+## Nettoyer un salon
+
+La commande « Nettoyer le salon » supprime les messages plus anciens qu'un âge (en heures ou en jours ; 0 pour tous), au choix **uniquement ceux du bot** ou **tous les messages** (droit « Gérer les messages » requis). Les messages épinglés sont toujours conservés. Le même nettoyage est lancé chaque heure pour les équipements qui ont une durée de conservation (voir « Configuration des équipements »).
+
+Discord ne permet la suppression en masse que pour les messages de moins de 14 jours. Les messages plus anciens sont supprimés un par un, à la cadence imposée par Discord : 100 au maximum par passage, le reste est traité au passage suivant (une ligne du log `jeediscord` le signale). Chaque passage examine au plus 1000 messages. Le nombre de messages supprimés est inscrit dans le log `jeediscord`.
 
 ## Actions rapides
 

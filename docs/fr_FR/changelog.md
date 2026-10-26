@@ -17,4 +17,6 @@
 - Correction : les formulaires de scénario « Envoyer un embed » et « Envoyer un fichier » n'enregistraient pas leurs champs
 - Les erreurs inattendues d'une action rapide sont journalisées et signalées à l'utilisateur au lieu de bloquer la réponse
 - Documentation : captures d'écran de la configuration, de l'équipement, des commandes et des formulaires de scénario
+- Commandes « Modifier le dernier message envoyé » et « Supprimer le dernier message envoyé »
+- Commande « Nettoyer le salon » (âge, messages du bot ou tous) et nettoyage automatique horaire selon la durée de conservation de l'équipement ; suppression en masse sous 14 jours, une par une au-delà
 - Réception des messages (contenu, auteur, pièces jointes) et des réactions (emoji, auteur, ajout ou retrait)

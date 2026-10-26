@@ -1,0 +1,32 @@
+<!--template/scenario/cmd.action.message.jeediscordClean (plugin jeediscord)-->
+<div class="input-group input-group-sm" style="width:100%">
+	<span class="input-group-addon roundedLeft" style="width:160px">{{Messages de plus de}}</span>
+	<input type="number" min="0" step="any" class="expressionAttr form-control input-sm" data-l1key="options" data-l2key="age" value="#age#" data-uid="#uid#" placeholder="{{0 = tous les messages}}">
+	<select class="expressionAttr form-control input-sm roundedRight" data-l1key="options" data-l2key="unit" data-uid="#uid#" style="width:120px">
+		<option value="hours">{{heures}}</option>
+		<option value="days">{{jours}}</option>
+	</select>
+</div>
+<div class="input-group input-group-sm" style="width:100%;padding-top:1px">
+	<span class="input-group-addon roundedLeft" style="width:160px">{{Messages concernés}}</span>
+	<select class="expressionAttr form-control input-sm roundedRight" data-l1key="options" data-l2key="scope" data-uid="#uid#">
+		<option value="bot">{{Uniquement ceux du bot}}</option>
+		<option value="all">{{Tous les messages (droit « Gérer les messages » requis)}}</option>
+	</select>
+</div>
+<script>
+	(function() {
+		var age = document.querySelector('.expressionAttr[data-l2key="age"][data-uid="#uid#"]')
+		var root = age.closest('.expressionOptions')
+		if (age.value == '#age#') {
+			age.value = ''
+		}
+		;['unit', 'scope'].forEach(function(key) {
+			var select = root.querySelector('.expressionAttr[data-l2key="' + key + '"]')
+			var value = ({ unit: '#unit#', scope: '#scope#' })[key]
+			if (value != '#' + key + '#') {
+				select.value = value
+			}
+		})
+	})()
+</script>

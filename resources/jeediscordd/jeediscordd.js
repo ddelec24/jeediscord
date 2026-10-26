@@ -18,6 +18,7 @@ const jeedom = require('./lib/jeedom');
 const { KeyedQueue } = require('./lib/queue');
 const sender = require('./lib/sender');
 const interactions = require('./lib/interactions');
+const cleaner = require('./lib/cleaner');
 
 const args = jeedom.getArgs();
 log.setLevel(args.loglevel || 'error');
@@ -47,6 +48,7 @@ let channelsTimer = null;
 let shuttingDown = false;
 const startedAt = Date.now();
 const queue = new KeyedQueue({ maxSize: 100 });
+const lastSent = new Map(); // salon -> identifiants des messages du dernier envoi (modification, suppression)
 let watchedChannels = new Set(); // salons associés à un équipement actif : seuls leurs événements sont transmis
 
 /* ****************************** Discord ****************************** */
@@ -429,6 +431,10 @@ const actions = {
         lastMessage = await channel.send(payload);
         ids.push(lastMessage.id);
       }
+      lastSent.set(channel.id, ids);
+      if (lastMessage && lastSent.size > 200) {
+        lastSent.delete(lastSent.keys().next().value);
+      }
       if (ask && lastMessage) {
         interactions.registerAsk(lastMessage, ask, askAnswers, client);
       }
@@ -442,7 +448,94 @@ const actions = {
     });
     return { queued: true, files: files.length, ignoredFiles: errors };
   },
+
+  /**
+   * Modifie le texte du dernier message envoyé dans le salon (placé dans la file du salon : après les envois en attente)
+   * @param {object} _params channelId, content, eqLogicId
+   */
+  async editLast(_params) {
+    requireReady();
+    const channel = await getTextChannel(_params.channelId);
+    if (String(_params.content ?? '').trim() === '') {
+      throw new ActionError('Empty content');
+    }
+    queue.push(channel.id, async () => {
+      const ids = lastSent.get(channel.id);
+      if (!ids || ids.length === 0) {
+        throw new Error('No message sent by the bot in this channel since the daemon started');
+      }
+      const content = sender.truncate(await sender.resolveMentions(_params.content, channel.guild), sender.LIMITS.content);
+      const message = await channel.messages.fetch(ids[ids.length - 1]);
+      await message.edit({ content });
+    }, { label: 'editLast' }).then(() => {
+      log.info('[EDIT] Dernier message modifié dans #' + channel.name);
+    }).catch((error) => reportError('EditError', 'Modification impossible dans #' + channel.name, error, _params.eqLogicId));
+    return { queued: true };
+  },
+
+  /**
+   * Supprime le dernier message envoyé dans le salon (toutes ses parties s'il a été découpé)
+   * @param {object} _params channelId, eqLogicId
+   */
+  async deleteLast(_params) {
+    requireReady();
+    const channel = await getTextChannel(_params.channelId);
+    queue.push(channel.id, async () => {
+      const ids = lastSent.get(channel.id);
+      if (!ids || ids.length === 0) {
+        throw new Error('No message sent by the bot in this channel since the daemon started');
+      }
+      lastSent.delete(channel.id);
+      for (const id of ids) {
+        try {
+          await channel.messages.delete(id);
+        } catch (error) {
+          // Message déjà supprimé : sans conséquence
+          if (error.code !== 10008) {
+            throw error;
+          }
+        }
+      }
+      return ids.length;
+    }, { label: 'deleteLast' }).then((count) => {
+      log.info('[DELETE] ' + count + ' message(s) supprimé(s) dans #' + channel.name);
+    }).catch((error) => reportError('DeleteError', 'Suppression impossible dans #' + channel.name, error, _params.eqLogicId));
+    return { queued: true };
+  },
+
+  /**
+   * Nettoie un salon : supprime les messages plus anciens que maxAge (en secondes, 0 = tous)
+   * @param {object} _params channelId, maxAge, scope ('bot' ou 'all'), eqLogicId
+   */
+  async purge(_params) {
+    requireReady();
+    const channel = await getTextChannel(_params.channelId);
+    const scope = _params.scope === 'all' ? 'all' : 'bot';
+    const maxAge = Math.max(0, Number(_params.maxAge) || 0) * 1000;
+    const permissions = channel.permissionsFor(channel.guild.members.me);
+    const required = [[PermissionFlagsBits.ViewChannel, 'View Channel'], [PermissionFlagsBits.ReadMessageHistory, 'Read Message History']];
+    if (scope === 'all') {
+      required.push([PermissionFlagsBits.ManageMessages, 'Manage Messages']);
+    }
+    const missing = required.filter(([flag]) => !permissions || !permissions.has(flag)).map(([, name]) => name);
+    if (missing.length > 0) {
+      throw new ActionError('Missing permissions in #' + channel.name + ': ' + missing.join(', '), 403);
+    }
+    // File distincte de celle des envois : un long nettoyage ne retarde pas les messages
+    queue.push('purge:' + channel.id, () => cleaner.purgeChannel(channel, { maxAge, scope, botId: client.user.id }), { label: 'purge' })
+      .then((result) => callback.send('purged', { eqLogicId: _params.eqLogicId, channelId: channel.id, ...result }))
+      .catch((error) => reportError('PurgeError', 'Nettoyage impossible dans #' + channel.name, error, _params.eqLogicId));
+    return { queued: true };
+  },
 };
+
+/**
+ * Journalise une erreur d'une action asynchrone et la transmet à Jeedom
+ */
+function reportError(_code, _text, _error, _eqLogicId) {
+  log.error('[' + _code + '] ' + _text + ' : ' + _error.message);
+  callback.send('error', { fatal: false, code: _code, eqLogicId: _eqLogicId, message: log.redact(_text + ' : ' + _error.message) });
+}
 
 /**
  * Salon textuel (texte, annonces ou discussion d'un salon vocal) à partir de son identifiant
