@@ -18,7 +18,8 @@
 	(function() {
 		var age = document.querySelector('.expressionAttr[data-l2key="age"][data-uid="#uid#"]')
 		var root = age.closest('.expressionOptions')
-		if (age.value == '#age#') {
+		// Marqueur construit en deux morceaux : le core remplacerait un « #age# » écrit en entier par la valeur saisie
+		if (age.value == '#' + 'age' + '#') {
 			age.value = ''
 		}
 		;['unit', 'scope'].forEach(function(key) {

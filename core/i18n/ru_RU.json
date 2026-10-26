@@ -168,6 +168,11 @@
         "Texte accompagnant les fichiers (optionnel)": "Текст к файлам (необязательно)",
         "Sélectionner une commande": "Выбрать команду"
     },
+    "plugins\/jeediscord\/core\/template\/scenario\/cmd.action.message.jeediscordObjectSummary.html": {
+        "Objet": "Объект",
+        "Nom de l'objet": "Название объекта",
+        "Sélectionner un objet": "Выбрать объект"
+    },
     "plugins\/jeediscord\/core\/template\/scenario\/cmd.action.message.jeediscordQuickActions.html": {
         "Message": "Сообщение",
         "Texte affiché au-dessus des boutons": "Текст над кнопками",

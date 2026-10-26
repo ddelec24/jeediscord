@@ -18,7 +18,8 @@ function jeediscord_setDefaultConfig() {
     'slashRoles' => '',
   );
   foreach ($defaults as $key => $value) {
-    if (config::byKey($key, 'jeediscord', null) === null) {
+    // byKey renvoie la valeur par défaut demandée quand la clé n'existe pas (jamais null avec la valeur par défaut habituelle)
+    if (config::byKey($key, 'jeediscord', '__unset__') === '__unset__') {
       config::save($key, $value, 'jeediscord');
     }
   }

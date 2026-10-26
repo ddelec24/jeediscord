@@ -1,12 +1,15 @@
 # Plugin JeeDiscord
 
-Le plugin **JeeDiscord** relie Jeedom à un serveur Discord grâce à un bot : envoi de messages depuis les scénarios, réception des messages et des réactions, questions (ask) avec boutons, etc.
+Le plugin **JeeDiscord** relie Jeedom à un serveur Discord grâce à un bot. Chaque équipement correspond à un salon, et le plugin permet de :
+
+- **envoyer** des messages, des embeds (messages enrichis) et des fichiers depuis les scénarios, avec mentions ;
+- **poser des questions** (action « Demander » des scénarios) avec des boutons ou un menu de réponses ;
+- **recevoir** les messages et les réactions emoji du salon ;
+- proposer des **boutons d'action rapide** et des **commandes slash** (`/jeedom`, `/clean`) pour piloter Jeedom depuis Discord ;
+- **modifier ou supprimer** des messages, **nettoyer** un salon, le **renommer** ou changer son sujet (un salon vocal peut servir d'afficheur) ;
+- envoyer des **résumés** (maison, objet, batteries) et des **alertes de surveillance** des démons et dépendances.
 
 Il s'appuie sur la bibliothèque [discord.js](https://discord.js.org/) v14 et sur l'API Discord v10.
-
-> **Important**
->
-> Le plugin est en cours de développement. Cette documentation sera complétée au fur et à mesure de l'ajout des fonctionnalités.
 
 # Prérequis
 
@@ -41,6 +44,7 @@ Après l'activation du plugin, installez les dépendances puis renseignez :
 - **Token du bot** : le token copié à l'étape 2. Il est chiffré dans la base Jeedom et masqué dans les logs.
 - **Type d'activité** et **Texte d'activité** : texte affiché sous le nom du bot dans Discord (par exemple « Personnalisé » + « Surveille la maison »). Laissez le texte vide pour ne rien afficher.
 - **Commandes slash** et **Rôles autorisés** : voir « Commandes slash » plus bas.
+- **Emojis** : emojis des résumés et des batteries, voir « Résumés ».
 - **Port interne du démon** (avancé) : port local utilisé entre Jeedom et le démon. Ne le modifiez qu'en cas de conflit avec un autre plugin.
 
 Le **statut du bot** indique si le démon est démarré et connecté à Discord, avec le nom du bot, le nombre de serveurs et la latence. La modification de l'activité est appliquée immédiatement, sans redémarrer le démon. La saisie ou la modification du token démarre ou redémarre le démon (si la gestion automatique du démon est activée), et le statut se met à jour tout seul après la sauvegarde.
@@ -90,7 +94,7 @@ Chaque équipement dispose des commandes suivantes, utilisables dans les scénar
 | Envoyer un embed | action / message | Envoie un message enrichi (titre, lien, description, champs, image, couleur, pied de page, horodatage). |
 | Envoyer un fichier | action / message | Envoie un ou plusieurs fichiers, avec un texte optionnel. |
 | Envoyer le résumé de la maison | action / autre | Envoie un embed avec les résumés globaux de Jeedom (température, humidité, ouvertures...) et l'état des batteries. |
-| Envoyer le résumé d'un objet | action / message | Envoie les résumés d'un objet Jeedom, dont le nom est saisi dans le champ message. |
+| Envoyer le résumé d'un objet | action / message | Envoie les résumés d'un objet Jeedom, choisi dans la liste des objets. |
 | Envoyer l'état des batteries | action / autre | Envoie la liste des équipements dont la batterie est faible, avec le nombre de batteries bonnes. |
 | Modifier le dernier message envoyé | action / message | Remplace le texte du dernier message envoyé par le bot dans le salon. |
 | Supprimer le dernier message envoyé | action / autre | Supprime le dernier message envoyé par le bot dans le salon (toutes ses parties s'il a été découpé). |
@@ -108,7 +112,7 @@ Chaque équipement dispose des commandes suivantes, utilisables dans les scénar
 
 ![Onglet Commandes](../images/device_commands.png)
 
-Les commandes d'envoi sont utilisées dans les **actions des scénarios** : choisissez la commande dans la liste, le formulaire correspondant s'affiche. Les commandes « Envoyer un embed », « Envoyer un fichier » et « Envoyer des actions rapides » sont masquées du dashboard, ce qui n'empêche pas de les utiliser dans les scénarios.
+Les commandes d'envoi sont utilisées dans les **actions des scénarios** : choisissez la commande dans la liste, le formulaire correspondant s'affiche. Seule la commande « Envoyer un message » est affichée par défaut sur le dashboard ; les autres sont masquées, ce qui n'empêche pas de les utiliser dans les scénarios (elles peuvent être rendues visibles dans l'onglet Commandes de l'équipement).
 
 ![Actions JeeDiscord dans un scénario : message, embed, fichier, question](../images/scenario_actions.png)
 
@@ -153,7 +157,7 @@ Une question reste valable tant que le délai n'est pas écoulé et que le démo
 Trois commandes envoient un embed de synthèse, à lancer depuis un scénario (par exemple un déclenchement programmé le matin) ou depuis un bouton d'action rapide :
 
 - **Envoyer le résumé de la maison** : les résumés globaux définis dans Jeedom (température, humidité, luminosité, puissance, ouvertures...), avec en pied de page le nombre de batteries bonnes, faibles et critiques.
-- **Envoyer le résumé d'un objet** : les résumés de l'objet dont vous indiquez le nom (ou l'identifiant) dans le champ « Nom de l'objet ».
+- **Envoyer le résumé d'un objet** : les résumés de l'objet dont vous indiquez le nom dans le champ « Objet ». Le bouton en bout de ligne (icône cube) ouvre la liste des objets de Jeedom ; vous pouvez aussi saisir le nom à la main, ou une variable de scénario.
 - **Envoyer l'état des batteries** : les équipements dont la batterie est faible (en orange) ou critique (en rouge), du plus faible au plus fort, avec les seuils de Jeedom (ceux de l'équipement s'il en définit). La couleur de l'embed suit le niveau le plus bas. Si tout est bon, le message le dit.
 
 **Important** : comme dans la barre de menu de Jeedom, le résumé de la maison n'affiche que les résumés « remontés ». Dans la page de l'objet (Outils > Objets, section Résumés), définissez la commande du résumé, puis cochez **Remonter dans le résumé global** pour ce résumé ; sans cette case, il n'apparaît que dans « Envoyer le résumé d'un objet ». Si aucun résumé n'est remonté, le message le précise.
@@ -224,12 +228,12 @@ Le plugin enregistre sur chaque serveur du bot (disponibles aussitôt) deux comm
 
 | Commande | Rôle |
 |---|---|
-| `/jeedom interaction texte` | Envoie une phrase aux interactions de Jeedom et affiche la réponse. |
-| `/jeedom scenario nom [action]` | Lance (par défaut), arrête, active ou désactive un scénario. Le nom se complète automatiquement. |
-| `/jeedom cmd commande [valeur]` | Exécute une commande de type action. La valeur sert aux commandes curseur, couleur, liste ou message. Le nom se complète automatiquement. |
-| `/clean [jours] [tous]` | Supprime les messages du salon plus anciens que le nombre de jours donné (0 : tous), ceux du bot ou, avec `tous`, ceux de tout le monde. Même fonctionnement que « Nettoyer le salon ». |
+| `/jeedom interaction text` | Envoie une phrase aux interactions de Jeedom et affiche la réponse. |
+| `/jeedom scenario name [action]` | Lance (par défaut), arrête, active ou désactive un scénario. Le nom se complète automatiquement. |
+| `/jeedom cmd command [value]` | Exécute une commande de type action. La valeur sert aux commandes curseur, couleur, liste ou message. Le nom se complète automatiquement. |
+| `/clean [days] [all]` | Supprime les messages du salon plus anciens que le nombre de jours donné (0 : tous), ceux du bot ou, avec `all`, ceux de tout le monde. Même fonctionnement que « Nettoyer le salon ». |
 
-Les réponses ne sont visibles que par la personne qui a tapé la commande. Les commandes sont décrites dans la langue de Discord de l'utilisateur (français, anglais, espagnol, allemand, italien, portugais, russe).
+Les réponses ne sont visibles que par la personne qui a tapé la commande. Les noms des commandes et des paramètres sont en anglais (règle de Discord pour la saisie) ; leurs descriptions s'affichent dans la langue de Discord de l'utilisateur (français, anglais, espagnol, allemand, italien, portugais, russe).
 
 **Sécurité** : une commande slash peut piloter toute la maison. Elle n'est donc exécutée que si :
 
@@ -271,3 +275,18 @@ Seuls les événements des salons associés à un équipement actif sont transmi
 L'envoi est asynchrone : le scénario continue immédiatement, et le message est placé dans la file d'attente du salon. Les messages d'un même salon partent toujours dans l'ordre. Les fichiers sont lus au moment de l'appel : vous pouvez supprimer un fichier temporaire juste après la commande.
 
 Avant d'envoyer, le plugin vérifie les droits du bot dans le salon (voir, envoyer des messages, intégrer des liens, joindre des fichiers). En cas de droit manquant ou d'échec, une erreur est inscrite dans le log `jeediscord`.
+
+# Dépannage
+
+| Symptôme | Cause probable et solution |
+|---|---|
+| Le démon ne démarre pas, « Le token du bot n'est pas renseigné » | Saisissez le token dans la configuration du plugin puis sauvegardez. |
+| « Connexion refusée par Discord : token du bot invalide » | Le token a été réinitialisé ou mal copié : générez-en un nouveau (portail développeur, onglet Bot) et sauvegardez la configuration. |
+| « Intent Message Content non activé » | Activez **Message Content Intent** dans l'onglet Bot du portail développeur, puis sauvegardez la configuration du plugin. |
+| « Dépendances non installées » | Lancez l'installation des dépendances depuis la page du plugin et consultez le log `jeediscord_packages`. |
+| Aucun salon dans la liste de l'équipement | Le démon n'est pas connecté, ou le bot n'a pas le droit de voir les salons : vérifiez le statut du bot dans la configuration et les permissions « View Channels ». |
+| Un message n'est pas envoyé | Consultez le log `jeediscord` : un droit manquant (envoyer des messages, intégrer des liens, joindre des fichiers) y est indiqué. |
+| Les commandes slash n'apparaissent pas | Réinvitez le bot avec le scope `applications.commands`, puis redémarrez le démon. Vérifiez que « Commandes slash » est activé dans la configuration. |
+| « Ce salon n'est associé à aucun équipement JeeDiscord actif » | Les commandes slash et les boutons ne fonctionnent que dans les salons d'un équipement actif. |
+| Le résumé de la maison est vide | Cochez « Remonter dans le résumé global » pour les résumés voulus dans la page de l'objet (voir « Résumés »). |
+| Le renommage d'un salon est en retard | Discord limite les changements de nom à 2 toutes les 10 minutes par salon (voir « Renommer un salon »). |

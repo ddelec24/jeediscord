@@ -168,6 +168,11 @@
         "Texte accompagnant les fichiers (optionnel)": "Testo che accompagna i file (facoltativo)",
         "Sélectionner une commande": "Seleziona un comando"
     },
+    "plugins\/jeediscord\/core\/template\/scenario\/cmd.action.message.jeediscordObjectSummary.html": {
+        "Objet": "Oggetto",
+        "Nom de l'objet": "Nome dell'oggetto",
+        "Sélectionner un objet": "Seleziona un oggetto"
+    },
     "plugins\/jeediscord\/core\/template\/scenario\/cmd.action.message.jeediscordQuickActions.html": {
         "Message": "Messaggio",
         "Texte affiché au-dessus des boutons": "Testo mostrato sopra i pulsanti",

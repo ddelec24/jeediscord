@@ -922,6 +922,7 @@ class jeediscord extends eqLogic {
           'title_disable' => 1,
           'message_placeholder' => __('Nom de l\'objet', __FILE__),
         ),
+        'template' => array('scenario' => 'jeediscord::jeediscordObjectSummary'),
       ),
       'sendBatterySummary' => array(
         'name' => __('Envoyer l\'état des batteries', __FILE__),
