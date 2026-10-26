@@ -19,6 +19,7 @@ const { KeyedQueue } = require('./lib/queue');
 const sender = require('./lib/sender');
 const interactions = require('./lib/interactions');
 const cleaner = require('./lib/cleaner');
+const slash = require('./lib/slash');
 
 const args = jeedom.getArgs();
 log.setLevel(args.loglevel || 'error');
@@ -196,6 +197,7 @@ function createClient() {
       guilds: listChannels(),
       versions: { node: process.version, discordjs: djsVersion },
     });
+    slash.syncAll(readyClient, config.slashEnabled !== false);
   });
   discordClient.on(Events.ShardDisconnect, (event) => {
     log.warning('[DISCORD] Déconnecté de la passerelle (code ' + event.code + ')');
@@ -214,7 +216,12 @@ function createClient() {
 
   /* ---------- Messages et réactions reçus ---------- */
   discordClient.on(Events.MessageCreate, onMessage);
-  discordClient.on(Events.InteractionCreate, (interaction) => interactions.onInteraction(interaction, { callback, name: (i) => displayName(i.user, i.member) }));
+  discordClient.on(Events.InteractionCreate, (interaction) => {
+    const context = { callback, name: (i) => displayName(i.user, i.member), purge: (params) => actions.purge(params) };
+    interactions.onInteraction(interaction, context);
+    slash.onInteraction(interaction, context);
+  });
+  discordClient.on(Events.GuildCreate, (guild) => slash.syncGuild(guild, config.slashEnabled !== false));
   const reactionError = (error) => log.error('[RECEIVE] Réaction non traitée : ' + error.message);
   discordClient.on(Events.MessageReactionAdd, (reaction, user) => onReaction(reaction, user, true).catch(reactionError));
   discordClient.on(Events.MessageReactionRemove, (reaction, user) => onReaction(reaction, user, false).catch(reactionError));
@@ -357,6 +364,18 @@ const actions = {
     if (client && client.isReady()) {
       client.user.setPresence(buildPresence(config.activityType, config.activity));
       log.info('[DISCORD] Activité mise à jour');
+    }
+    return true;
+  },
+
+  /**
+   * Active ou désactive les commandes slash (enregistrées sur chaque serveur)
+   * @param {object} _params enabled
+   */
+  async setSlash(_params) {
+    config.slashEnabled = Boolean(_params.enabled);
+    if (client && client.isReady()) {
+      slash.syncAll(client, config.slashEnabled);
     }
     return true;
   },

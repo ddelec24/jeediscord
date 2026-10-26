@@ -14,6 +14,8 @@ function jeediscord_setDefaultConfig() {
     'socketport' => 55095,
     'activityType' => 'custom',
     'activity' => '',
+    'slashEnabled' => 1,
+    'slashRoles' => '',
   );
   foreach ($defaults as $key => $value) {
     if (config::byKey($key, 'jeediscord', null) === null) {

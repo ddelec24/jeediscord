@@ -136,6 +136,7 @@ class jeediscord extends eqLogic {
       'apikey' => jeedom::getApiKey(__CLASS__),
       'activityType' => config::byKey('activityType', __CLASS__, 'custom'),
       'activity' => config::byKey('activity', __CLASS__, ''),
+      'slashEnabled' => config::byKey('slashEnabled', __CLASS__, 1) == 1,
       'channels' => self::getWatchedChannels(),
     )));
     umask($oldUmask);
@@ -278,6 +279,10 @@ class jeediscord extends eqLogic {
         break;
       case 'quickAction':
         return self::runQuickAction($_data);
+      case 'slashCommand':
+        return self::runSlashCommand($_data);
+      case 'slashAutocomplete':
+        return self::slashAutocomplete($_data);
       case 'status':
         config::save('connected', !empty($_data['connected']) ? 1 : 0, __CLASS__);
         break;
@@ -490,6 +495,158 @@ class jeediscord extends eqLogic {
   }
 
   /**
+   * Droit d'utiliser les commandes slash : le salon doit être associé à un équipement actif, et l'utilisateur
+   * administrateur du serveur ou titulaire d'un des rôles autorisés dans la configuration (liste vide : administrateurs seuls)
+   * @param array $_data channelId, roles, admin
+   * @return string|null message de refus, null si autorisé
+   */
+  private static function slashDenied($_data) {
+    if (config::byKey('slashEnabled', __CLASS__, 1) != 1) {
+      return '⛔ ' . __('Les commandes slash sont désactivées', __FILE__);
+    }
+    if (count(self::byChannelId(isset($_data['channelId']) ? $_data['channelId'] : '')) == 0) {
+      return '⛔ ' . __('Ce salon n\'est associé à aucun équipement JeeDiscord actif', __FILE__);
+    }
+    if (!empty($_data['admin'])) {
+      return null;
+    }
+    $allowed = trim((string) config::byKey('slashRoles', __CLASS__, ''));
+    if ($allowed == '') {
+      return '⛔ ' . __('Réservé aux administrateurs du serveur', __FILE__);
+    }
+    if (!self::isRoleAllowed($allowed, isset($_data['roles']) ? $_data['roles'] : array())) {
+      return '⛔ ' . __('Vous n\'avez pas le droit d\'utiliser cette commande', __FILE__);
+    }
+    return null;
+  }
+
+  /**
+   * Exécute une commande slash (/jeedom interaction, scenario, cmd et /clean)
+   * @param array $_data command, sub, options, channelId, user, roles, admin
+   * @return array ok, message, purge (nettoyage à lancer par le démon)
+   */
+  private static function runSlashCommand($_data) {
+    $denied = self::slashDenied($_data);
+    if ($denied !== null) {
+      log::add(__CLASS__, 'warning', __('Commande slash refusée', __FILE__) . ' : ' . (isset($_data['user']['name']) ? $_data['user']['name'] : '?') . ' (' . $denied . ')');
+      return array('ok' => false, 'message' => $denied);
+    }
+    $options = isset($_data['options']) && is_array($_data['options']) ? $_data['options'] : array();
+    $userName = isset($_data['user']['name']) ? $_data['user']['name'] : '?';
+    $command = isset($_data['command']) ? $_data['command'] : '';
+    $sub = isset($_data['sub']) ? $_data['sub'] : '';
+    log::add(__CLASS__, 'info', __('Commande slash', __FILE__) . ' /' . $command . ' ' . $sub . ' ' . __('demandée par', __FILE__) . ' ' . $userName);
+    try {
+      if ($command == 'clean') {
+        $days = isset($options['days']) ? max(0, (int) $options['days']) : 0;
+        return array(
+          'ok' => true,
+          'message' => '🧹 ' . ($days > 0 ? sprintf(__('Nettoyage lancé : messages de plus de %s jour(s)', __FILE__), $days) : __('Nettoyage lancé : tous les messages', __FILE__)),
+          'purge' => array('maxAge' => $days * 86400, 'scope' => !empty($options['all']) ? 'all' : 'bot'),
+        );
+      }
+      switch ($sub) {
+        case 'interaction':
+          $reply = interactQuery::tryToReply(isset($options['text']) ? (string) $options['text'] : '', array('plugin' => __CLASS__));
+          $text = is_array($reply) && isset($reply['reply']) ? trim((string) $reply['reply']) : '';
+          return array('ok' => true, 'message' => $text != '' ? $text : '✅');
+        case 'scenario':
+          $scenario = self::findScenario(isset($options['name']) ? $options['name'] : '');
+          $action = isset($options['action']) && $options['action'] != '' ? $options['action'] : 'start';
+          switch ($action) {
+            case 'stop':
+              $scenario->stop();
+              return array('ok' => true, 'message' => '⏹️ ' . $scenario->getHumanName());
+            case 'enable':
+            case 'disable':
+              $scenario->setIsActive($action == 'enable' ? 1 : 0);
+              $scenario->save();
+              return array('ok' => true, 'message' => ($action == 'enable' ? '🟢 ' : '⚪ ') . $scenario->getHumanName());
+            default:
+              $scenario->setTags(array('#jeediscord_user#' => $userName, '#jeediscord_channel#' => $_data['channelId']));
+              if ($scenario->launch() === false) {
+                return array('ok' => false, 'message' => '⚠️ ' . __('Le scénario est désactivé', __FILE__));
+              }
+              return array('ok' => true, 'message' => '▶️ ' . $scenario->getHumanName());
+          }
+        case 'cmd':
+          $cmd = self::findActionCmd(isset($options['command']) ? $options['command'] : '');
+          $value = isset($options['value']) ? (string) $options['value'] : '';
+          $execOptions = array();
+          switch ($cmd->getSubType()) {
+            case 'slider':
+              $execOptions['slider'] = str_replace(',', '.', $value);
+              break;
+            case 'color':
+              $execOptions['color'] = $value;
+              break;
+            case 'select':
+              $execOptions['select'] = $value;
+              break;
+            case 'message':
+              $execOptions['title'] = '';
+              $execOptions['message'] = $value;
+              break;
+          }
+          $cmd->execCmd($execOptions);
+          return array('ok' => true, 'message' => '✅ ' . $cmd->getHumanName());
+      }
+    } catch (Throwable $e) {
+      log::add(__CLASS__, 'error', __('Commande slash en erreur', __FILE__) . ' : ' . $e->getMessage());
+      return array('ok' => false, 'message' => '❌ ' . $e->getMessage());
+    }
+    return array('ok' => false, 'message' => '⚠️ ' . __('Commande inconnue', __FILE__));
+  }
+
+  /**
+   * Commande action désignée par son identifiant ou son nom complet
+   * @param string $_target
+   * @return cmd
+   */
+  private static function findActionCmd($_target) {
+    $_target = trim((string) $_target);
+    $cmd = ctype_digit($_target) ? cmd::byId($_target) : cmd::byString($_target);
+    if (!is_object($cmd) || $cmd->getType() != 'action') {
+      throw new Exception(__('Commande action introuvable', __FILE__) . ' : ' . $_target);
+    }
+    return $cmd;
+  }
+
+  /**
+   * Propositions d'autocomplétion des commandes slash (25 au maximum), réservées aux utilisateurs autorisés
+   * @param array $_data kind (name ou command), query, channelId, roles, admin
+   * @return array choices : tableaux name / value
+   */
+  private static function slashAutocomplete($_data) {
+    $choices = array();
+    if (self::slashDenied($_data) !== null) {
+      return array('choices' => $choices);
+    }
+    $query = mb_strtolower(trim(isset($_data['query']) ? (string) $_data['query'] : ''));
+    if (isset($_data['kind']) && $_data['kind'] == 'name') {
+      foreach (scenario::all() as $scenario) {
+        $name = $scenario->getHumanName();
+        if ($query == '' || mb_strpos(mb_strtolower($name), $query) !== false) {
+          $choices[] = array('name' => ($scenario->getIsActive() == 1 ? '' : '⚪ ') . $name, 'value' => (string) $scenario->getId());
+        }
+        if (count($choices) >= 25) {
+          break;
+        }
+      }
+    } elseif (isset($_data['kind']) && $_data['kind'] == 'command') {
+      $rows = DB::Prepare('SELECT c.id AS id, c.name AS cmdName, e.name AS eqName, o.name AS objectName
+        FROM cmd c INNER JOIN eqLogic e ON e.id = c.eqLogic_id LEFT JOIN object o ON o.id = e.object_id
+        WHERE c.type = \'action\' AND e.isEnable = 1
+        AND (c.name LIKE :q OR e.name LIKE :q OR o.name LIKE :q)
+        ORDER BY o.name, e.name, c.name LIMIT 25', array('q' => '%' . addcslashes($query, '%_\\') . '%'), DB::FETCH_TYPE_ALL);
+      foreach ((array) $rows as $row) {
+        $choices[] = array('name' => '[' . ($row['objectName'] != '' ? $row['objectName'] : __('Aucun', __FILE__)) . '][' . $row['eqName'] . '][' . $row['cmdName'] . ']', 'value' => (string) $row['id']);
+      }
+    }
+    return array('choices' => $choices);
+  }
+
+  /**
    * Vérifie que l'utilisateur possède l'un des rôles autorisés (nom ou identifiant, séparés par des virgules).
    * Une liste vide autorise tous les utilisateurs du salon.
    * @param string $_allowed
@@ -622,6 +779,18 @@ class jeediscord extends eqLogic {
       } catch (Exception $e) {
         log::add(__CLASS__, 'error', $e->getMessage());
       }
+    }
+  }
+
+  // Activation ou désactivation des commandes slash : appliquée aussitôt sur les serveurs
+  public static function postConfig_slashEnabled($_value) {
+    if (self::deamon_info()['state'] != 'ok') {
+      return;
+    }
+    try {
+      self::sendToDaemon('setSlash', array('enabled' => $_value == 1));
+    } catch (Exception $e) {
+      log::add(__CLASS__, 'warning', __('Impossible de mettre à jour les commandes slash', __FILE__) . ' : ' . $e->getMessage());
     }
   }
 

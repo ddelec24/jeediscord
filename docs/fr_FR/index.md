@@ -40,6 +40,7 @@ Après l'activation du plugin, installez les dépendances puis renseignez :
 
 - **Token du bot** : le token copié à l'étape 2. Il est chiffré dans la base Jeedom et masqué dans les logs.
 - **Type d'activité** et **Texte d'activité** : texte affiché sous le nom du bot dans Discord (par exemple « Personnalisé » + « Surveille la maison »). Laissez le texte vide pour ne rien afficher.
+- **Commandes slash** et **Rôles autorisés** : voir « Commandes slash » plus bas.
 - **Port interne du démon** (avancé) : port local utilisé entre Jeedom et le démon. Ne le modifiez qu'en cas de conflit avec un autre plugin.
 
 Le **statut du bot** indique si le démon est démarré et connecté à Discord, avec le nom du bot, le nombre de serveurs et la latence. La modification de l'activité est appliquée immédiatement, sans redémarrer le démon. La saisie ou la modification du token démarre ou redémarre le démon (si la gestion automatique du démon est activée), et le statut se met à jour tout seul après la sauvegarde.
@@ -190,6 +191,28 @@ Température ? | interaction | quelle est la température du salon
 Le résultat de l'action est affiché uniquement à la personne qui a cliqué (✅ exécuté, ⛔ rôle non autorisé, ❌ erreur : la cause est alors dans le log `jeediscord`, ⚠️ bouton qui n'est plus valide, par exemple parce que l'équipement a été désactivé ou déplacé dans un autre salon). Pour une interaction, la réponse de l'interaction est affichée. Le bouton ▶ à droite du champ « Boutons » insère un scénario choisi dans la liste, le bouton à côté insère une commande action. Un scénario lancé par un bouton reçoit les tags `#jeediscord_user#` (nom de la personne) et `#jeediscord_channel#` (identifiant du salon). Maximum : 25 boutons par message.
 
 ![Formulaire des actions rapides](../images/scenario_quick_actions.png)
+
+## Commandes slash
+
+Le plugin enregistre sur chaque serveur du bot (disponibles aussitôt) deux commandes que l'on tape dans Discord en commençant par `/` :
+
+| Commande | Rôle |
+|---|---|
+| `/jeedom interaction texte` | Envoie une phrase aux interactions de Jeedom et affiche la réponse. |
+| `/jeedom scenario nom [action]` | Lance (par défaut), arrête, active ou désactive un scénario. Le nom se complète automatiquement. |
+| `/jeedom cmd commande [valeur]` | Exécute une commande de type action. La valeur sert aux commandes curseur, couleur, liste ou message. Le nom se complète automatiquement. |
+| `/clean [jours] [tous]` | Supprime les messages du salon plus anciens que le nombre de jours donné (0 : tous), ceux du bot ou, avec `tous`, ceux de tout le monde. Même fonctionnement que « Nettoyer le salon ». |
+
+Les réponses ne sont visibles que par la personne qui a tapé la commande. Les commandes sont décrites dans la langue de Discord de l'utilisateur (français, anglais, espagnol, allemand, italien, portugais, russe).
+
+**Sécurité** : une commande slash peut piloter toute la maison. Elle n'est donc exécutée que si :
+
+- le salon est associé à un **équipement JeeDiscord actif** (ailleurs, le bot répond qu'elle n'est pas disponible) ;
+- la personne est **administrateur du serveur**, ou possède un des **rôles autorisés** de la configuration du plugin (noms ou identifiants de rôles séparés par des virgules). Tant que la liste est vide, seuls les administrateurs peuvent utiliser les commandes.
+
+L'autocomplétion des scénarios et des commandes est soumise aux mêmes droits : une personne non autorisée ne voit aucune proposition. Le réglage « Commandes slash » de la configuration permet de les désactiver : elles sont alors retirées des serveurs.
+
+Si le bot n'a pas été invité avec le scope `applications.commands` (voir « Créer le bot Discord »), l'enregistrement est refusé : le log `jeediscord_daemon` l'indique, et il suffit de réinviter le bot avec l'URL corrigée. Les commandes `/jeedom` et `/clean` sont aussi visibles dans les paramètres du serveur (Intégrations), où Discord permet d'en restreindre l'usage à certains salons ou rôles en plus des droits du plugin.
 
 ## Mentions
 

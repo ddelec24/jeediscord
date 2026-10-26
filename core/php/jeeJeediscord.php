@@ -31,5 +31,12 @@ try {
   echo is_array($result) ? json_encode($result) : 'OK';
 } catch (Throwable $e) {
   log::add('jeediscord', 'error', $e->getMessage() . ' (' . basename($e->getFile()) . ':' . $e->getLine() . ')');
-  echo (isset($data['event']) && $data['event'] == 'quickAction') ? json_encode(array('ok' => false, 'message' => '❌ ' . __('Erreur lors de l\'exécution, consultez le log', __FILE__))) : 'OK';
+  $event = isset($data['event']) ? $data['event'] : '';
+  if ($event == 'slashAutocomplete') {
+    echo json_encode(array('choices' => array()));
+  } elseif ($event == 'quickAction' || $event == 'slashCommand') {
+    echo json_encode(array('ok' => false, 'message' => '❌ ' . __('Erreur lors de l\'exécution, consultez le log', __FILE__)));
+  } else {
+    echo 'OK';
+  }
 }

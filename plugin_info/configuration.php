@@ -61,6 +61,27 @@ if (!isConnect()) {
       </div>
     </div>
 
+    <legend><i class="fas fa-terminal"></i> {{Commandes slash}}</legend>
+    <div class="form-group">
+      <label class="col-md-4 control-label">{{Commandes slash}}
+        <sup><i class="fas fa-question-circle tooltips" title="{{Commandes /jeedom (interaction, scenario, cmd) et /clean, enregistrées sur chaque serveur du bot. Elles ne fonctionnent que dans les salons associés à un équipement actif}}"></i></sup>
+      </label>
+      <div class="col-md-4">
+        <select class="configKey form-control" data-l1key="slashEnabled">
+          <option value="1">{{Activées}}</option>
+          <option value="0">{{Désactivées}}</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="col-md-4 control-label">{{Rôles autorisés}}
+        <sup><i class="fas fa-question-circle tooltips" title="{{Noms ou identifiants de rôles Discord, séparés par des virgules. Les administrateurs du serveur sont toujours autorisés. Vide : administrateurs uniquement}}"></i></sup>
+      </label>
+      <div class="col-md-4">
+        <input type="text" class="configKey form-control" data-l1key="slashRoles" placeholder="Famille, Admin">
+      </div>
+    </div>
+
     <legend><i class="fas fa-cogs"></i> {{Avancé}}</legend>
     <div class="form-group">
       <label class="col-md-4 control-label">{{Port interne du démon}}
