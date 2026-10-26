@@ -1336,7 +1336,7 @@ class jeediscordCmd extends cmd {
   }
 
   /** Fichiers téléchargés pour l'envoi en cours (dossiers à supprimer après l'envoi) */
-  private static $downloads = array();
+  private static $_downloads = array();
 
   const DOWNLOAD_MAX_SIZE = 104857600; // 100 Mo : la plus grande limite d'envoi de Discord
   const DOWNLOAD_TIMEOUT = 60;
@@ -1372,7 +1372,7 @@ class jeediscordCmd extends cmd {
     }
     $dir = $base . '/' . bin2hex(random_bytes(8));
     mkdir($dir, 0700);
-    self::$downloads[] = $dir;
+    self::$_downloads[] = $dir;
     // Nom générique : l'adresse ne dit rien du contenu, et peut contenir des données sensibles ou très longues
     $target = $dir . '/' . self::DOWNLOAD_NAME;
     $handle = @fopen($target, 'wb');
@@ -1428,10 +1428,10 @@ class jeediscordCmd extends cmd {
    * Supprime les fichiers téléchargés pour l'envoi qui vient d'être transmis au démon
    */
   public static function cleanDownloads() {
-    foreach (self::$downloads as $dir) {
+    foreach (self::$_downloads as $dir) {
       self::removeDir($dir);
     }
-    self::$downloads = array();
+    self::$_downloads = array();
   }
 
   /*     * **********************Getteur Setteur*************************** */
