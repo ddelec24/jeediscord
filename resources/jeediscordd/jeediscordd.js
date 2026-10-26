@@ -16,6 +16,7 @@ const { Client, GatewayIntentBits, Partials, Options, ActivityType, ChannelType,
 const log = require('./lib/logger');
 const jeedom = require('./lib/jeedom');
 const { KeyedQueue } = require('./lib/queue');
+const sender = require('./lib/sender');
 
 const args = jeedom.getArgs();
 log.setLevel(args.loglevel || 'error');
@@ -45,6 +46,7 @@ let channelsTimer = null;
 let shuttingDown = false;
 const startedAt = Date.now();
 const queue = new KeyedQueue({ maxSize: 100 });
+let watchedChannels = new Set(); // salons associés à un équipement actif : seuls leurs événements sont transmis
 
 /* ****************************** Discord ****************************** */
 
@@ -205,7 +207,91 @@ function createClient() {
     discordClient.on(event, scheduleChannelsUpdate);
   }
 
+  /* ---------- Messages et réactions reçus ---------- */
+  discordClient.on(Events.MessageCreate, onMessage);
+  const reactionError = (error) => log.error('[RECEIVE] Réaction non traitée : ' + error.message);
+  discordClient.on(Events.MessageReactionAdd, (reaction, user) => onReaction(reaction, user, true).catch(reactionError));
+  discordClient.on(Events.MessageReactionRemove, (reaction, user) => onReaction(reaction, user, false).catch(reactionError));
+
   return discordClient;
+}
+
+/**
+ * Nom affiché d'un auteur : surnom sur le serveur, sinon nom d'affichage, sinon nom d'utilisateur
+ * @param {import('discord.js').User} _user
+ * @param {import('discord.js').GuildMember|null} _member
+ */
+function displayName(_user, _member) {
+  return (_member && _member.displayName) || _user.globalName || _user.username || '';
+}
+
+/**
+ * Message reçu dans un salon surveillé (les messages du bot lui-même et les messages système sont ignorés)
+ * @param {import('discord.js').Message} _message
+ */
+function onMessage(_message) {
+  if (!watchedChannels.has(_message.channelId) || _message.system || _message.author.id === client.user.id) {
+    return;
+  }
+  const data = {
+    channelId: _message.channelId,
+    messageId: _message.id,
+    content: _message.content,
+    author: {
+      id: _message.author.id,
+      name: displayName(_message.author, _message.member),
+      username: _message.author.username,
+      bot: Boolean(_message.author.bot || _message.webhookId),
+    },
+    attachments: _message.attachments.map((a) => ({ name: a.name, url: a.url, contentType: a.contentType, size: a.size })),
+    replyTo: _message.reference ? _message.reference.messageId : null,
+  };
+  log.info('[RECEIVE] Message de ' + data.author.name + ' dans #' + (_message.channel.name || _message.channelId) + ' (' + data.content.length + ' caractères, ' + data.attachments.length + ' pièce(s) jointe(s))');
+  callback.send('message', data);
+}
+
+/**
+ * Réaction ajoutée ou retirée sur un message d'un salon surveillé
+ * @param {import('discord.js').MessageReaction} _reaction
+ * @param {import('discord.js').User} _user
+ * @param {boolean} _added
+ */
+async function onReaction(_reaction, _user, _added) {
+  const channelId = _reaction.message.channelId;
+  if (!watchedChannels.has(channelId) || _user.id === client.user.id) {
+    return;
+  }
+  let user = _user;
+  if (user.partial) {
+    try {
+      user = await user.fetch();
+    } catch (error) {
+      log.debug('[RECEIVE] Utilisateur ' + user.id + ' non récupéré : ' + error.message);
+    }
+  }
+  const member = _reaction.message.guild ? _reaction.message.guild.members.cache.get(user.id) : null;
+  const emoji = _reaction.emoji;
+  const data = {
+    channelId,
+    messageId: _reaction.message.id,
+    added: _added,
+    // Emoji unicode tel quel, emoji personnalisé sous la forme :nom:
+    emoji: emoji.id ? ':' + emoji.name + ':' : emoji.name,
+    emojiId: emoji.id || null,
+    user: { id: user.id, name: displayName(user, member), bot: Boolean(user.bot) },
+  };
+  log.info('[RECEIVE] Réaction ' + data.emoji + (_added ? ' ajoutée' : ' retirée') + ' par ' + data.user.name);
+  callback.send('reaction', data);
+}
+
+/**
+ * Met à jour la liste des salons surveillés
+ * @param {Array<string>} _channels
+ */
+function setWatchedChannels(_channels) {
+  watchedChannels = new Set((Array.isArray(_channels) ? _channels : []).filter((id) => /^[0-9]{17,20}$/.test(String(id))).map(String));
+  log.info('[RECEIVE] ' + watchedChannels.size + ' salon(s) surveillé(s)');
+  log.debug('[RECEIVE] Salons surveillés : ' + [...watchedChannels].join(', '));
 }
 
 /**
@@ -272,7 +358,104 @@ const actions = {
     requireReady();
     return listChannels();
   },
+
+  async setChannels(_params) {
+    setWatchedChannels(_params.channels);
+    return { count: watchedChannels.size };
+  },
+
+  /**
+   * Envoi d'un message (texte, embed, fichiers) dans un salon.
+   * Les fichiers sont lus immédiatement, puis l'envoi est placé dans la file du salon :
+   * Jeedom n'attend pas la fin de l'envoi. Le résultat est transmis par l'événement messageSent.
+   * @param {object} _params channelId, content, embed, files, defaultColor, eqLogicId
+   */
+  async send(_params) {
+    requireReady();
+    const channel = await getTextChannel(_params.channelId);
+    let embedParams = _params.embed && typeof _params.embed === 'object' ? _params.embed : null;
+    const embedHasData = (_embed) => ['title', 'description', 'image', 'thumbnail'].some((key) => String(_embed[key] ?? '').trim() !== '') || (Array.isArray(_embed.fields) && _embed.fields.length > 0);
+    if (embedParams && !embedHasData(embedParams)) {
+      embedParams = null;
+    }
+    const paths = Array.isArray(_params.files) ? _params.files.filter((f) => typeof f === 'string' && f !== '') : [];
+    // Image d'embed désignée par un chemin local : envoyée comme pièce jointe
+    if (embedParams && embedParams.image && !/^https?:\/\//i.test(embedParams.image)) {
+      paths.unshift(embedParams.image);
+      delete embedParams.image;
+    }
+    checkPermissions(channel, { embed: Boolean(embedParams), files: paths.length > 0 });
+    const { files, errors } = sender.loadFiles(paths, sender.getUploadLimit(channel.guild));
+    const hasContent = String(_params.content ?? '').trim() !== '';
+    if (!hasContent && !embedParams && files.length === 0) {
+      throw new ActionError(errors.length > 0 ? 'No valid file: ' + errors.join(', ') : 'Nothing to send');
+    }
+    queue.push(channel.id, async () => {
+      const content = await sender.resolveMentions(_params.content, channel.guild);
+      let embed = null;
+      if (embedParams) {
+        for (const key of ['title', 'description', 'footer']) {
+          embedParams[key] = await sender.resolveMentions(embedParams[key], channel.guild);
+        }
+        embed = sender.buildEmbed(embedParams, files, sender.parseColor(_params.defaultColor));
+      }
+      const payloads = sender.buildPayloads({ content, embed, files });
+      const ids = [];
+      for (const payload of payloads) {
+        const message = await channel.send(payload);
+        ids.push(message.id);
+      }
+      return ids;
+    }, { label: 'send' }).then((ids) => {
+      log.info('[SEND] ' + ids.length + ' message(s) envoyé(s) dans #' + channel.name);
+      callback.send('messageSent', { eqLogicId: _params.eqLogicId, channelId: channel.id, messageIds: ids });
+    }).catch((error) => {
+      log.error('[SEND] Échec de l\'envoi dans #' + channel.name + ' : ' + error.message);
+      callback.send('error', { fatal: false, code: 'SendError', eqLogicId: _params.eqLogicId, message: log.redact(error.message) });
+    });
+    return { queued: true, files: files.length, ignoredFiles: errors };
+  },
 };
+
+/**
+ * Salon textuel (texte, annonces ou discussion d'un salon vocal) à partir de son identifiant
+ * @param {string} _channelId
+ * @returns {Promise<import('discord.js').GuildTextBasedChannel>}
+ */
+async function getTextChannel(_channelId) {
+  if (!/^[0-9]{17,20}$/.test(String(_channelId ?? ''))) {
+    throw new ActionError('Invalid channel ID');
+  }
+  let channel;
+  try {
+    channel = await client.channels.fetch(_channelId);
+  } catch (error) {
+    throw new ActionError('Channel not found or not visible by the bot: ' + _channelId, 404);
+  }
+  if (!channel || !channel.guild || !channel.isTextBased()) {
+    throw new ActionError('Channel is not a text channel: ' + _channelId);
+  }
+  return channel;
+}
+
+/**
+ * Vérifie les droits du bot avant d'envoyer, pour une erreur claire et sans appel invalide à l'API
+ * (les appels refusés comptent dans la limite d'appels invalides de Discord)
+ */
+function checkPermissions(_channel, _needs) {
+  const permissions = _channel.permissionsFor(_channel.guild.members.me);
+  const required = [[PermissionFlagsBits.ViewChannel, 'View Channel'], [PermissionFlagsBits.SendMessages, 'Send Messages']];
+  if (_needs.embed) {
+    required.push([PermissionFlagsBits.EmbedLinks, 'Embed Links']);
+  }
+  if (_needs.files) {
+    required.push([PermissionFlagsBits.AttachFiles, 'Attach Files']);
+  }
+  const missing = required.filter(([flag]) => !permissions || !permissions.has(flag)).map(([, name]) => name);
+  if (missing.length > 0) {
+    throw new ActionError('Missing permissions in #' + _channel.name + ': ' + missing.join(', '), 403);
+  }
+}
 
 async function handleAction(_action, _params) {
   if (!Object.prototype.hasOwnProperty.call(actions, _action)) {
@@ -332,6 +515,7 @@ async function main() {
     process.exit(1);
   }
   log.debug('Arguments : ' + JSON.stringify(args));
+  setWatchedChannels(config.channels);
   log.debug('Activité : type=' + config.activityType + ', texte=' + JSON.stringify(config.activity || ''));
 
   jeedom.writePid(args.pid);

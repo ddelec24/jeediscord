@@ -74,41 +74,54 @@ if (!isConnect()) {
 </form>
 
 <script>
-  function jeediscord_refreshBotStatus() {
+  /* Affiche l'état du bot. _poll : nombre de nouvelles tentatives tant que le bot n'est pas connecté */
+  function jeediscord_refreshBotStatus(_poll) {
     var status = document.getElementById('span_jeediscordBotStatus')
+    var icon = document.querySelector('#bt_jeediscordRefreshStatus i')
     if (!status) {
       return
     }
-    $.ajax({
+    icon.classList.add('fa-spin')
+    domUtils.ajax({
       type: 'POST',
       url: 'plugins/jeediscord/core/ajax/jeediscord.ajax.php',
       data: { action: 'getBotStatus' },
       dataType: 'json',
       global: false,
       error: function() {
+        icon.classList.remove('fa-spin')
         status.className = 'label label-danger'
         status.textContent = '{{Erreur}}'
       },
       success: function(data) {
+        icon.classList.remove('fa-spin')
         if (data.state != 'ok') {
           status.className = 'label label-danger'
           status.textContent = '{{Erreur}}'
           return
         }
         var result = data.result
-        if (!result.daemon) {
-          status.className = 'label label-warning'
-          status.textContent = '{{Démon arrêté}}'
-        } else if (!result.ready) {
-          status.className = 'label label-warning'
-          status.textContent = '{{Connexion à Discord en cours}}'
-        } else {
+        if (result.daemon && result.ready) {
           status.className = 'label label-success'
           status.textContent = '{{Connecté}} : ' + result.bot.tag + ' (' + result.guilds + ' {{serveur(s)}}, ' + result.wsPing + ' ms)'
+          return
+        }
+        status.className = 'label label-warning'
+        status.textContent = result.daemon ? '{{Connexion à Discord en cours}}' : '{{Démon arrêté}}'
+        if (_poll > 0) {
+          setTimeout(function() { jeediscord_refreshBotStatus(_poll - 1) }, 2000)
         }
       }
     })
   }
-  document.getElementById('bt_jeediscordRefreshStatus').addEventListener('click', jeediscord_refreshBotStatus)
-  jeediscord_refreshBotStatus()
+
+  /* Appelée par le core après la sauvegarde de la configuration : le démon peut démarrer ou redémarrer */
+  function jeediscord_postSaveConfiguration() {
+    jeediscord_refreshBotStatus(10)
+  }
+
+  document.getElementById('bt_jeediscordRefreshStatus').addEventListener('click', function() {
+    jeediscord_refreshBotStatus(0)
+  })
+  jeediscord_refreshBotStatus(0)
 </script>

@@ -136,6 +136,7 @@ class jeediscord extends eqLogic {
       'apikey' => jeedom::getApiKey(__CLASS__),
       'activityType' => config::byKey('activityType', __CLASS__, 'custom'),
       'activity' => config::byKey('activity', __CLASS__, ''),
+      'channels' => self::getWatchedChannels(),
     )));
     umask($oldUmask);
     chmod($configFile, 0600);
@@ -255,6 +256,19 @@ class jeediscord extends eqLogic {
       case 'channels':
         self::saveGuilds(isset($_data['guilds']) ? $_data['guilds'] : array());
         break;
+      case 'message':
+        foreach (self::byChannelId(isset($_data['channelId']) ? $_data['channelId'] : '') as $eqLogic) {
+          $eqLogic->onMessageReceived($_data);
+        }
+        break;
+      case 'reaction':
+        foreach (self::byChannelId(isset($_data['channelId']) ? $_data['channelId'] : '') as $eqLogic) {
+          $eqLogic->onReactionReceived($_data);
+        }
+        break;
+      case 'messageSent':
+        log::add(__CLASS__, 'debug', __('Message envoyé', __FILE__) . ' : ' . json_encode($_data));
+        break;
       case 'status':
         config::save('connected', !empty($_data['connected']) ? 1 : 0, __CLASS__);
         break;
@@ -269,6 +283,51 @@ class jeediscord extends eqLogic {
       default:
         log::add(__CLASS__, 'debug', __('Événement inconnu reçu du démon', __FILE__) . ' : ' . $event);
     }
+  }
+
+  /**
+   * Identifiants des salons associés à un équipement actif
+   * @return array
+   */
+  public static function getWatchedChannels() {
+    $channels = array();
+    foreach (self::byType(__CLASS__, true) as $eqLogic) {
+      $channelId = $eqLogic->getConfiguration('channelId', '');
+      if ($channelId != '') {
+        $channels[] = $channelId;
+      }
+    }
+    return array_values(array_unique($channels));
+  }
+
+  /**
+   * Transmet au démon la liste des salons surveillés (après ajout, modification ou suppression d'un équipement)
+   */
+  public static function updateWatchedChannels() {
+    $deamon_info = self::deamon_info();
+    if ($deamon_info['state'] != 'ok') {
+      return;
+    }
+    try {
+      self::sendToDaemon('setChannels', array('channels' => self::getWatchedChannels()));
+    } catch (Exception $e) {
+      log::add(__CLASS__, 'warning', __('Impossible de transmettre la liste des salons au démon', __FILE__) . ' : ' . $e->getMessage());
+    }
+  }
+
+  /**
+   * Équipements actifs associés à un salon
+   * @param string $_channelId
+   * @return jeediscord[]
+   */
+  public static function byChannelId($_channelId) {
+    $return = array();
+    foreach (self::byType(__CLASS__, true) as $eqLogic) {
+      if ($eqLogic->getConfiguration('channelId', '') === (string) $_channelId) {
+        $return[] = $eqLogic;
+      }
+    }
+    return $return;
   }
 
   /**
@@ -324,9 +383,19 @@ class jeediscord extends eqLogic {
     message::removeAll(__CLASS__, 'daemonError');
     $token = trim((string) config::byKey('token', __CLASS__, ''));
     $deamon_info = self::deamon_info();
-    if ($deamon_info['state'] == 'ok' && hash('sha256', $token) != cache::byKey('jeediscord::tokenHash')->getValue('')) {
-      log::add(__CLASS__, 'info', __('Token modifié, redémarrage du démon', __FILE__));
-      self::deamon_start();
+    if ($deamon_info['state'] == 'ok') {
+      if (hash('sha256', $token) != cache::byKey('jeediscord::tokenHash')->getValue('')) {
+        log::add(__CLASS__, 'info', __('Token modifié, redémarrage du démon', __FILE__));
+        self::deamon_start();
+      }
+    } elseif ($deamon_info['launchable'] == 'ok' && config::byKey('deamonAutoMode', __CLASS__, 1) == 1) {
+      // Premier token saisi (ou erreur bloquante corrigée) : démarrage sans attendre la vérification périodique du core
+      log::add(__CLASS__, 'info', __('Token renseigné, démarrage du démon', __FILE__));
+      try {
+        self::deamon_start();
+      } catch (Exception $e) {
+        log::add(__CLASS__, 'error', $e->getMessage());
+      }
     }
   }
 
@@ -369,6 +438,175 @@ class jeediscord extends eqLogic {
 
   // Fonction exécutée automatiquement après la sauvegarde (création ou mise à jour) de l'équipement
   public function postSave() {
+    $this->createCommands();
+    self::updateWatchedChannels();
+  }
+
+  // Fonction exécutée automatiquement après la suppression de l'équipement
+  public function postRemove() {
+    self::updateWatchedChannels();
+  }
+
+  /**
+   * Définition des commandes créées automatiquement sur chaque équipement
+   * @return array logicalId => paramètres
+   */
+  public static function getCommandsDefinition() {
+    return array(
+      'sendMessage' => array(
+        'name' => __('Envoyer un message', __FILE__),
+        'type' => 'action',
+        'subType' => 'message',
+        'isVisible' => 1,
+        'display' => array(
+          'title_placeholder' => __('Titre (optionnel)', __FILE__),
+          'message_placeholder' => __('Message', __FILE__),
+        ),
+      ),
+      'sendEmbed' => array(
+        'name' => __('Envoyer un embed', __FILE__),
+        'type' => 'action',
+        'subType' => 'message',
+        'isVisible' => 0,
+        'display' => array(
+          'title_placeholder' => __('Titre', __FILE__),
+          'message_placeholder' => __('Description', __FILE__),
+        ),
+        'template' => array('scenario' => 'jeediscord::jeediscordEmbed'),
+      ),
+      'sendFile' => array(
+        'name' => __('Envoyer un fichier', __FILE__),
+        'type' => 'action',
+        'subType' => 'message',
+        'isVisible' => 0,
+        'display' => array(
+          'title_disable' => 1,
+          'message_placeholder' => __('Message', __FILE__),
+        ),
+        'template' => array('scenario' => 'jeediscord::jeediscordFile'),
+      ),
+      'lastMessage' => array(
+        'name' => __('Dernier message', __FILE__),
+        'type' => 'info',
+        'subType' => 'string',
+        'isVisible' => 1,
+      ),
+      'lastMessageAuthor' => array(
+        'name' => __('Auteur du dernier message', __FILE__),
+        'type' => 'info',
+        'subType' => 'string',
+        'isVisible' => 1,
+      ),
+      'lastMessageAuthorId' => array(
+        'name' => __('Identifiant de l\'auteur du dernier message', __FILE__),
+        'type' => 'info',
+        'subType' => 'string',
+        'isVisible' => 0,
+      ),
+      'lastMessageAttachments' => array(
+        'name' => __('Pièces jointes du dernier message', __FILE__),
+        'type' => 'info',
+        'subType' => 'string',
+        'isVisible' => 0,
+      ),
+      'lastReaction' => array(
+        'name' => __('Dernière réaction', __FILE__),
+        'type' => 'info',
+        'subType' => 'string',
+        'isVisible' => 1,
+      ),
+      'lastReactionAuthor' => array(
+        'name' => __('Auteur de la dernière réaction', __FILE__),
+        'type' => 'info',
+        'subType' => 'string',
+        'isVisible' => 0,
+      ),
+      'lastReactionAdded' => array(
+        'name' => __('Dernière réaction ajoutée', __FILE__),
+        'type' => 'info',
+        'subType' => 'binary',
+        'isVisible' => 0,
+      ),
+    );
+  }
+
+  /**
+   * Crée les commandes manquantes sans modifier celles existantes (nom, visibilité... personnalisés par l'utilisateur)
+   */
+  public function createCommands() {
+    $order = 0;
+    foreach (self::getCommandsDefinition() as $logicalId => $definition) {
+      $order++;
+      $cmd = $this->getCmd(null, $logicalId);
+      if (is_object($cmd)) {
+        // Le template de scénario fait partie du fonctionnement de la commande : toujours à jour
+        if (isset($definition['template'])) {
+          foreach ($definition['template'] as $version => $template) {
+            if ($cmd->getTemplate($version) != $template) {
+              $cmd->setTemplate($version, $template);
+              $cmd->save();
+            }
+          }
+        }
+        continue;
+      }
+      $cmd = new jeediscordCmd();
+      $cmd->setEqLogic_id($this->getId());
+      $cmd->setLogicalId($logicalId);
+      $cmd->setName($definition['name']);
+      $cmd->setType($definition['type']);
+      $cmd->setSubType($definition['subType']);
+      $cmd->setIsVisible($definition['isVisible']);
+      $cmd->setOrder($order);
+      if (isset($definition['display'])) {
+        foreach ($definition['display'] as $key => $value) {
+          $cmd->setDisplay($key, $value);
+        }
+      }
+      if (isset($definition['template'])) {
+        foreach ($definition['template'] as $version => $template) {
+          $cmd->setTemplate($version, $template);
+        }
+      }
+      if ($definition['type'] == 'info') {
+        // Le même message ou le même emoji reçu deux fois doit déclencher les scénarios à chaque fois
+        $cmd->setConfiguration('repeatEventManagement', 'always');
+        $cmd->setIsHistorized(0);
+      }
+      $cmd->save();
+    }
+  }
+
+  /**
+   * Met à jour les commandes info à la réception d'un message. Le contenu est mis à jour en dernier :
+   * un scénario déclenché par « Dernier message » lit ainsi l'auteur et les pièces jointes de ce même message.
+   * @param array $_data
+   */
+  public function onMessageReceived($_data) {
+    $urls = array();
+    if (isset($_data['attachments']) && is_array($_data['attachments'])) {
+      foreach ($_data['attachments'] as $attachment) {
+        if (isset($attachment['url'])) {
+          $urls[] = $attachment['url'];
+        }
+      }
+    }
+    log::add(__CLASS__, 'debug', $this->getHumanName() . ' ' . __('message reçu de', __FILE__) . ' ' . (isset($_data['author']['name']) ? $_data['author']['name'] : '?'));
+    $this->checkAndUpdateCmd('lastMessageAuthorId', isset($_data['author']['id']) ? $_data['author']['id'] : '');
+    $this->checkAndUpdateCmd('lastMessageAuthor', isset($_data['author']['name']) ? $_data['author']['name'] : '');
+    $this->checkAndUpdateCmd('lastMessageAttachments', implode("\n", $urls));
+    $this->checkAndUpdateCmd('lastMessage', isset($_data['content']) ? $_data['content'] : '');
+  }
+
+  /**
+   * Met à jour les commandes info à l'ajout ou au retrait d'une réaction (l'emoji en dernier, pour la même raison)
+   * @param array $_data
+   */
+  public function onReactionReceived($_data) {
+    log::add(__CLASS__, 'debug', $this->getHumanName() . ' ' . __('réaction reçue', __FILE__) . ' : ' . (isset($_data['emoji']) ? $_data['emoji'] : '?'));
+    $this->checkAndUpdateCmd('lastReactionAuthor', isset($_data['user']['name']) ? $_data['user']['name'] : '');
+    $this->checkAndUpdateCmd('lastReactionAdded', !empty($_data['added']) ? 1 : 0);
+    $this->checkAndUpdateCmd('lastReaction', isset($_data['emoji']) ? $_data['emoji'] : '');
   }
 
   // Fonction exécutée automatiquement avant la suppression de l'équipement
@@ -385,8 +623,136 @@ class jeediscordCmd extends cmd {
 
   /*     * *********************Methode d'instance************************* */
 
+  // Les commandes sont créées par le plugin : elles ne sont pas supprimées par la sauvegarde de l'équipement
+  public function dontRemoveCmd() {
+    return true;
+  }
+
   // Exécution d'une commande
   public function execute($_options = array()) {
+    $eqLogic = $this->getEqLogic();
+    $channelId = $eqLogic->getConfiguration('channelId', '');
+    if ($channelId == '') {
+      throw new Exception(__('Aucun salon sélectionné pour l\'équipement', __FILE__) . ' ' . $eqLogic->getHumanName());
+    }
+    $params = array(
+      'eqLogicId' => $eqLogic->getId(),
+      'channelId' => $channelId,
+      'defaultColor' => $eqLogic->getConfiguration('embedColor', ''),
+      'content' => '',
+      'embed' => null,
+      'files' => array(),
+    );
+    switch ($this->getLogicalId()) {
+      case 'sendMessage':
+        $title = trim(self::option($_options, 'title'));
+        $params['content'] = ($title != '' ? '**' . $title . "**\n" : '') . self::option($_options, 'message');
+        $params['files'] = self::normalizeFiles(isset($_options['files']) ? $_options['files'] : array());
+        break;
+      case 'sendEmbed':
+        $params['content'] = self::option($_options, 'content');
+        $params['embed'] = array(
+          'title' => self::option($_options, 'title'),
+          'url' => trim(self::option($_options, 'url')),
+          'description' => self::option($_options, 'message'),
+          'color' => trim(self::option($_options, 'color')),
+          'footer' => self::option($_options, 'footer'),
+          'image' => trim(self::option($_options, 'image')),
+          'thumbnail' => trim(self::option($_options, 'thumbnail')),
+          'fields' => self::parseFields(self::option($_options, 'fields'), self::option($_options, 'fieldsInline') == '1'),
+          'timestamp' => self::option($_options, 'timestamp') == '1',
+        );
+        if ($params['embed']['image'] != '' && !preg_match('#^https?://#i', $params['embed']['image'])) {
+          $image = self::normalizeFiles(array($params['embed']['image']));
+          $params['embed']['image'] = count($image) > 0 ? $image[0] : '';
+        }
+        $params['files'] = self::normalizeFiles(isset($_options['files']) ? $_options['files'] : array());
+        break;
+      case 'sendFile':
+        $params['content'] = self::option($_options, 'message');
+        $params['files'] = self::normalizeFiles(isset($_options['files']) ? $_options['files'] : array());
+        if (count($params['files']) == 0) {
+          throw new Exception(__('Aucun fichier valide à envoyer', __FILE__));
+        }
+        break;
+      default:
+        return;
+    }
+    $result = jeediscord::sendToDaemon('send', $params);
+    if (is_array($result) && !empty($result['ignoredFiles'])) {
+      log::add('jeediscord', 'warning', __('Fichiers ignorés', __FILE__) . ' : ' . implode(', ', $result['ignoredFiles']));
+    }
+  }
+
+  /**
+   * Valeur texte d'une option de commande (les marqueurs #option# non remplacés sont ignorés)
+   * @param array $_options
+   * @param string $_key
+   * @return string
+   */
+  private static function option($_options, $_key) {
+    if (!is_array($_options) || !isset($_options[$_key]) || is_array($_options[$_key])) {
+      return '';
+    }
+    $value = (string) $_options[$_key];
+    return ($value == '#' . $_key . '#') ? '' : $value;
+  }
+
+  /**
+   * Champs d'embed saisis sous la forme « Nom | Valeur », un par ligne
+   * @param string $_text
+   * @param bool $_inline
+   * @return array
+   */
+  private static function parseFields($_text, $_inline) {
+    $fields = array();
+    foreach (preg_split('/\r\n|\r|\n/', (string) $_text) as $line) {
+      $parts = explode('|', $line, 2);
+      if (count($parts) != 2 || trim($parts[0]) == '' || trim($parts[1]) == '') {
+        continue;
+      }
+      $fields[] = array('name' => trim($parts[0]), 'value' => trim($parts[1]), 'inline' => $_inline);
+    }
+    return $fields;
+  }
+
+  /**
+   * Liste de fichiers à envoyer : tableau (option files des scénarios, rapports, caméra)
+   * ou texte (un chemin par ligne, ou séparés par des virgules ou points-virgules).
+   * Les chemins relatifs sont résolus depuis le dossier de Jeedom. Les fichiers de configuration
+   * de Jeedom et les dossiers système sensibles sont refusés.
+   * @param array|string $_files
+   * @return array chemins absolus des fichiers existants
+   */
+  public static function normalizeFiles($_files) {
+    if (!is_array($_files)) {
+      $_files = preg_split('/[\r\n,;]+/', (string) $_files);
+    }
+    $jeedomRoot = realpath(__DIR__ . '/../../../..');
+    $forbidden = array($jeedomRoot . '/core/config/', '/etc/', '/root/', '/proc/', '/sys/');
+    $return = array();
+    foreach ($_files as $file) {
+      $file = trim((string) $file);
+      if ($file == '' || $file == '#files#') {
+        continue;
+      }
+      if ($file[0] != '/') {
+        $file = $jeedomRoot . '/' . $file;
+      }
+      $path = realpath($file);
+      if ($path === false || !is_file($path) || !is_readable($path)) {
+        log::add('jeediscord', 'warning', __('Fichier introuvable ou illisible', __FILE__) . ' : ' . $file);
+        continue;
+      }
+      foreach ($forbidden as $prefix) {
+        if (strpos($path, $prefix) === 0 || strpos($path, '/.') !== false) {
+          log::add('jeediscord', 'warning', __('Envoi de ce fichier refusé', __FILE__) . ' : ' . $path);
+          continue 2;
+        }
+      }
+      $return[] = $path;
+    }
+    return array_values(array_unique($return));
   }
 
   /*     * **********************Getteur Setteur*************************** */

@@ -138,14 +138,18 @@ $eqLogics = eqLogic::byType($plugin->getId());
 											<a class="btn btn-default roundedRight" id="bt_jeediscordRefreshChannels" title="{{Actualiser la liste des salons}}"><i class="fas fa-sync"></i></a>
 										</span>
 									</div>
+									<!-- Identifiant du salon : renseigné uniquement par la liste ci-dessus -->
+									<input type="hidden" class="eqLogicAttr" data-l1key="configuration" data-l2key="channelId">
 								</div>
 							</div>
+
+							<legend><i class="fas fa-paper-plane"></i> {{Envoi}}</legend>
 							<div class="form-group">
-								<label class="col-sm-4 control-label">{{Identifiant du salon}}
-									<sup><i class="fas fa-question-circle tooltips" title="{{Dans Discord, activez le mode développeur (Paramètres > Avancés), puis clic droit sur le salon > Copier l'identifiant du salon}}"></i></sup>
+								<label class="col-sm-4 control-label">{{Couleur des embeds}}
+									<sup><i class="fas fa-question-circle tooltips" title="{{Couleur de la bordure des messages enrichis (embeds) envoyés dans ce salon, si le scénario n'en précise pas}}"></i></sup>
 								</label>
-								<div class="col-sm-6">
-									<input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="channelId" placeholder="{{Identifiant du salon (17 à 20 chiffres)}}" inputmode="numeric" pattern="[0-9]{17,20}">
+								<div class="col-sm-2">
+									<input type="color" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="embedColor">
 								</div>
 							</div>
 						</div>

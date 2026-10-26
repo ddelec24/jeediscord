@@ -35,6 +35,7 @@ function jeediscord_fillChannels() {
       option.value = channel.id
       option.textContent = (channel.type == 'voice' ? '🔊 ' : '# ') + channel.name + (channel.parent != '' ? ' (' + channel.parent + ')' : '') + (!channel.canSend ? ' - {{droits insuffisants}}' : '')
       option.disabled = !channel.canView
+      option.title = 'ID : ' + channel.id
       group.appendChild(option)
       if (channel.id == current) {
         found = true
@@ -74,6 +75,7 @@ function jeediscord_loadChannels(_refresh) {
 
 $('#sel_jeediscordChannel').on('change', function() {
   $('.eqLogicAttr[data-l1key=configuration][data-l2key=channelId]').value(this.value)
+  jeeFrontEnd.modifyWithoutSave = true
 })
 
 $('#bt_jeediscordRefreshChannels').on('click', function() {
