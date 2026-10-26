@@ -1,5 +1,4 @@
 <!--template/scenario/cmd.action.message.jeediscordFile (plugin jeediscord)-->
-<div class="jeediscordFile" data-uid="#uid#">
 	<div class="input-group input-group-sm" style="width:100%">
 		<span class="input-group-addon roundedLeft" style="width:110px">{{Fichiers}}</span>
 		<textarea class="expressionAttr form-control ta_autosize roundedRight" data-l1key="options" data-l2key="files" rows="1" style="resize:vertical" data-uid="#uid#" placeholder="{{Chemin complet d'un fichier par ligne (10 maximum par message)}}">#files#</textarea>
@@ -11,10 +10,10 @@
 			<button class="btn btn-default roundedRight jeediscordListCmd" type="button" title="{{Sélectionner une commande}}" data-uid="#uid#"><i class="fas fa-list-alt"></i></button>
 		</span>
 	</div>
-</div>
 <script>
 	(function() {
-		var root = document.querySelector('.jeediscordFile[data-uid="#uid#"]')
+		// Pas de conteneur : le core ne lit que les champs situés à 3 niveaux au plus sous l'action
+		var root = document.querySelector('.expressionAttr[data-l2key="files"][data-uid="#uid#"]').closest('.expressionOptions')
 		root.querySelectorAll('.expressionAttr[data-l1key="options"]').forEach(function(el) {
 			if (el.value == '#' + el.getAttribute('data-l2key') + '#') {
 				el.value = ''

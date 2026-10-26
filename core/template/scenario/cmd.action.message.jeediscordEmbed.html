@@ -1,5 +1,4 @@
 <!--template/scenario/cmd.action.message.jeediscordEmbed (plugin jeediscord)-->
-<div class="jeediscordEmbed" data-uid="#uid#">
 	<div class="input-group input-group-sm" style="width:100%">
 		<span class="input-group-addon roundedLeft" style="width:110px">{{Titre}}</span>
 		<input class="expressionAttr form-control input-sm" data-l1key="options" data-l2key="title" value="#title#" data-uid="#uid#" placeholder="{{Titre de l'embed}}">
@@ -19,9 +18,8 @@
 		<span class="input-group-addon hasBtn">
 			<button class="btn btn-default jeediscordListCmd" type="button" title="{{Sélectionner une commande}}" data-uid="#uid#" data-target="fields"><i class="fas fa-list-alt"></i></button>
 		</span>
-		<span class="input-group-addon roundedRight" title="{{Afficher les champs côte à côte}}">
-			<label class="checkbox-inline" style="margin:0"><input type="checkbox" class="expressionAttr" data-l1key="options" data-l2key="fieldsInline" data-uid="#uid#">{{En ligne}}</label>
-		</span>
+		<span class="input-group-addon" title="{{Afficher les champs côte à côte}}">{{En ligne}}</span>
+		<input type="checkbox" class="expressionAttr" data-l1key="options" data-l2key="fieldsInline" data-uid="#uid#" style="margin:0 8px">
 	</div>
 	<div class="input-group input-group-sm" style="width:100%;padding-top:1px">
 		<span class="input-group-addon roundedLeft" style="width:110px">{{Image}}</span>
@@ -33,8 +31,9 @@
 		<span class="input-group-addon roundedLeft" style="width:110px">{{Pied de page}}</span>
 		<input class="expressionAttr form-control input-sm" data-l1key="options" data-l2key="footer" value="#footer#" data-uid="#uid#">
 		<span class="input-group-addon" title="{{Ajoute la date et l'heure d'envoi}}">
-			<label class="checkbox-inline" style="margin:0"><input type="checkbox" class="expressionAttr" data-l1key="options" data-l2key="timestamp" data-uid="#uid#">{{Horodatage}}</label>
+			{{Horodatage}}
 		</span>
+		<input type="checkbox" class="expressionAttr" data-l1key="options" data-l2key="timestamp" data-uid="#uid#" style="margin:0 8px">
 		<span class="input-group-addon" style="width:70px">{{Couleur}}</span>
 		<input type="color" class="form-control input-sm jeediscordColorPicker" data-uid="#uid#" style="width:50px">
 		<input class="expressionAttr form-control input-sm roundedRight" data-l1key="options" data-l2key="color" value="#color#" data-uid="#uid#" style="width:90px" placeholder="{{Défaut}}">
@@ -43,11 +42,11 @@
 		<span class="input-group-addon roundedLeft" style="width:110px">{{Texte}}</span>
 		<input class="expressionAttr form-control input-sm roundedRight" data-l1key="options" data-l2key="content" value="#content#" data-uid="#uid#" placeholder="{{Texte affiché au-dessus de l'embed (optionnel, pour notifier avec une mention)}}">
 	</div>
-</div>
 <script>
 	(function() {
 		var uid = '#uid#'
-		var root = document.querySelector('.jeediscordEmbed[data-uid="' + uid + '"]')
+		// Pas de conteneur ni de label autour des cases : le core ne lit que les champs situés à 3 niveaux au plus sous l'action
+		var root = document.querySelector('.expressionAttr[data-l2key="title"][data-uid="' + uid + '"]').closest('.expressionOptions')
 		// Options jamais renseignées : le core laisse le marqueur #option# en place
 		root.querySelectorAll('.expressionAttr[data-l1key="options"]').forEach(function(el) {
 			var key = el.getAttribute('data-l2key')
