@@ -171,6 +171,15 @@ $eqLogics = eqLogic::byType($plugin->getId());
 									</select>
 								</div>
 							</div>
+							<legend><i class="fas fa-heartbeat"></i> {{Surveillance}}</legend>
+							<div class="form-group">
+								<label class="col-sm-4 control-label">{{Alertes de surveillance}}
+									<sup><i class="fas fa-question-circle tooltips" title="{{Envoie dans ce salon une alerte quand le démon ou les dépendances d'un plugin sont en panne, puis un message au retour à la normale}}"></i></sup>
+								</label>
+								<div class="col-sm-6">
+									<label class="checkbox-inline"><input type="checkbox" class="eqLogicAttr" data-l1key="configuration" data-l2key="receiveAlerts">{{Recevoir les alertes}}</label>
+								</div>
+							</div>
 						</div>
 
 						<!-- Partie droite de l'onglet "Équipement" -->

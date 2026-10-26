@@ -82,6 +82,16 @@ if (!isConnect()) {
       </div>
     </div>
 
+    <legend><i class="fas fa-smile"></i> {{Résumés}}</legend>
+    <div class="form-group">
+      <label class="col-md-4 control-label">{{Emojis}}
+        <sup><i class="fas fa-question-circle tooltips" title="{{Un emoji par ligne, au format clé | emoji. Clés : celles des résumés de Jeedom (temperature, humidity, luminosity, power, motion, security, door, windows, shutter, light, outlet), battery_ok, battery_warning, battery_danger, alert, recovery. Les clés absentes gardent leur valeur par défaut}}"></i></sup>
+      </label>
+      <div class="col-md-4">
+        <textarea class="configKey form-control" data-l1key="emojis" rows="5" placeholder="temperature | 🌡️&#10;battery_danger | 🔴"></textarea>
+      </div>
+    </div>
+
     <legend><i class="fas fa-cogs"></i> {{Avancé}}</legend>
     <div class="form-group">
       <label class="col-md-4 control-label">{{Port interne du démon}}

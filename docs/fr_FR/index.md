@@ -75,6 +75,7 @@ Un équipement correspond à **un salon Discord**.
 
 - **Salon** : liste des salons visibles par le bot, groupés par serveur. Elle est disponible quand le démon est connecté à Discord et se met à jour automatiquement quand un salon est créé, renommé ou supprimé. Le bouton d'actualisation force la mise à jour. La mention « droits insuffisants » signale un salon où le bot ne peut pas envoyer de messages.
 - **Couleur des embeds** : couleur de la bordure des messages enrichis envoyés dans ce salon, utilisée quand le scénario n'en précise pas.
+- **Alertes de surveillance** : cochez « Recevoir les alertes » pour que ce salon reçoive les alertes de panne (voir « Surveillance »).
 - **Nettoyage automatique** : nombre de jours pendant lesquels les messages du salon sont conservés (0 : aucun nettoyage). Les plus anciens sont supprimés automatiquement, une fois par heure, soit uniquement ceux du bot, soit tous les messages (le bot doit alors avoir le droit « Gérer les messages »). Voir « Nettoyer un salon ».
 
 ![Équipement](../images/device_config.png)
@@ -88,6 +89,9 @@ Chaque équipement dispose des commandes suivantes, utilisables dans les scénar
 | Envoyer un message | action / message | Envoie un texte. Le titre, s'il est renseigné, est affiché en gras sur la première ligne. |
 | Envoyer un embed | action / message | Envoie un message enrichi (titre, lien, description, champs, image, couleur, pied de page, horodatage). |
 | Envoyer un fichier | action / message | Envoie un ou plusieurs fichiers, avec un texte optionnel. |
+| Envoyer le résumé de la maison | action / autre | Envoie un embed avec les résumés globaux de Jeedom (température, humidité, ouvertures...) et l'état des batteries. |
+| Envoyer le résumé d'un objet | action / message | Envoie les résumés d'un objet Jeedom, dont le nom est saisi dans le champ message. |
+| Envoyer l'état des batteries | action / autre | Envoie la liste des équipements dont la batterie est faible, avec le nombre de batteries bonnes. |
 | Modifier le dernier message envoyé | action / message | Remplace le texte du dernier message envoyé par le bot dans le salon. |
 | Supprimer le dernier message envoyé | action / autre | Supprime le dernier message envoyé par le bot dans le salon (toutes ses parties s'il a été découpé). |
 | Renommer le salon | action / message | Change le nom du salon. |
@@ -143,6 +147,28 @@ Les commandes « Envoyer un message », « Envoyer un embed » et « Envoyer un 
 Dès qu'une réponse est donnée, ou à la fin du délai, les boutons sont désactivés et le message indique qui a répondu et quoi (ou « Aucune réponse »). La réponse est enregistrée dans la variable du scénario, comme avec les autres plugins de messagerie. N'importe quelle personne pouvant écrire dans le salon peut répondre.
 
 Une question reste valable tant que le délai n'est pas écoulé et que le démon n'est pas redémarré : après un redémarrage, ses boutons sont simplement désactivés au prochain clic.
+
+## Résumés
+
+Trois commandes envoient un embed de synthèse, à lancer depuis un scénario (par exemple un déclenchement programmé le matin) ou depuis un bouton d'action rapide :
+
+- **Envoyer le résumé de la maison** : les résumés globaux définis dans Jeedom (température, humidité, luminosité, puissance, ouvertures...), avec en pied de page le nombre de batteries bonnes, faibles et critiques.
+- **Envoyer le résumé d'un objet** : les résumés de l'objet dont vous indiquez le nom (ou l'identifiant) dans le champ « Nom de l'objet ».
+- **Envoyer l'état des batteries** : les équipements dont la batterie est faible (en orange) ou critique (en rouge), du plus faible au plus fort, avec les seuils de Jeedom (ceux de l'équipement s'il en définit). La couleur de l'embed suit le niveau le plus bas. Si tout est bon, le message le dit.
+
+**Important** : comme dans la barre de menu de Jeedom, le résumé de la maison n'affiche que les résumés « remontés ». Dans la page de l'objet (Outils > Objets, section Résumés), définissez la commande du résumé, puis cochez **Remonter dans le résumé global** pour ce résumé ; sans cette case, il n'apparaît que dans « Envoyer le résumé d'un objet ». Si aucun résumé n'est remonté, le message le précise.
+
+Les **emojis** devant chaque résumé et chaque niveau de batterie se personnalisent dans la configuration du plugin : une ligne `clé | emoji` par emoji (clés : `temperature`, `humidity`, `luminosity`, `power`, `motion`, `security`, `door`, `windows`, `shutter`, `light`, `outlet`, `battery_ok`, `battery_warning`, `battery_danger`, `alert`, `recovery`). Une clé absente garde son emoji par défaut.
+
+## Surveillance
+
+Toutes les 5 minutes, le plugin vérifie les plugins actifs : un **démon arrêté** alors qu'il devrait tourner (gestion automatique activée et démarrage possible), ou des **dépendances en erreur**. Les salons des équipements qui ont coché « Recevoir les alertes » reçoivent alors une alerte rouge listant les pannes, puis un message vert quand tout est rentré dans l'ordre.
+
+Pour éviter les fausses alertes, une panne n'est signalée que si elle dure au moins deux vérifications (Jeedom relance lui-même les démons en panne), et une seule fois. Le démon de JeeDiscord lui-même n'est pas surveillé : s'il est arrêté, il ne peut pas écrire sur Discord.
+
+## Captures des caméras
+
+Le plugin **Caméra** de Jeedom sait envoyer ses captures à une commande de messagerie : sa commande « Envoyer une capture » (`sendSnapshot`) transmet le titre, le message et les fichiers à la commande indiquée dans son paramètre `sendTo`. Les commandes « Envoyer un message » et « Envoyer un fichier » de JeeDiscord acceptent ces fichiers : il suffit d'indiquer l'une d'elles comme destinataire, par exemple `#[Salon][Discord][Envoyer un message]#`. Aucun réglage supplémentaire n'est nécessaire.
 
 ## Modifier ou supprimer le dernier message
 

@@ -6,6 +6,7 @@
 
 /* * ***************************Includes********************************* */
 require_once __DIR__  . '/../../../../core/php/core.inc.php';
+require_once __DIR__ . '/jeediscordReport.class.php';
 
 class jeediscord extends eqLogic {
   /*     * *************************Attributs****************************** */
@@ -298,6 +299,18 @@ class jeediscord extends eqLogic {
         log::add(__CLASS__, 'debug', __('Événement inconnu reçu du démon', __FILE__) . ' : ' . $event);
     }
     return $return;
+  }
+
+  // Surveillance des démons et des dépendances des plugins : alertes dans les salons des équipements concernés
+  public static function cron5() {
+    if (self::deamon_info()['state'] != 'ok') {
+      return;
+    }
+    try {
+      jeediscordReport::monitor();
+    } catch (Throwable $e) {
+      log::add(__CLASS__, 'warning', __('Surveillance en erreur', __FILE__) . ' : ' . $e->getMessage());
+    }
   }
 
   /**
@@ -829,6 +842,7 @@ class jeediscord extends eqLogic {
       throw new Exception(__('L\'identifiant du salon Discord est invalide (17 à 20 chiffres attendus)', __FILE__));
     }
     $this->setConfiguration('channelId', $channelId);
+    $this->setConfiguration('receiveAlerts', $this->getConfiguration('receiveAlerts', 0) == 1 ? 1 : 0);
     $this->setConfiguration('retentionDays', max(0, min(3650, (int) $this->getConfiguration('retentionDays', 0))));
     $this->setConfiguration('retentionScope', $this->getConfiguration('retentionScope', 'bot') == 'all' ? 'all' : 'bot');
   }
@@ -892,6 +906,28 @@ class jeediscord extends eqLogic {
           'message_placeholder' => __('Message', __FILE__),
         ),
         'template' => array('scenario' => 'jeediscord::jeediscordQuickActions'),
+      ),
+      'sendSummary' => array(
+        'name' => __('Envoyer le résumé de la maison', __FILE__),
+        'type' => 'action',
+        'subType' => 'other',
+        'isVisible' => 0,
+      ),
+      'sendObjectSummary' => array(
+        'name' => __('Envoyer le résumé d\'un objet', __FILE__),
+        'type' => 'action',
+        'subType' => 'message',
+        'isVisible' => 0,
+        'display' => array(
+          'title_disable' => 1,
+          'message_placeholder' => __('Nom de l\'objet', __FILE__),
+        ),
+      ),
+      'sendBatterySummary' => array(
+        'name' => __('Envoyer l\'état des batteries', __FILE__),
+        'type' => 'action',
+        'subType' => 'other',
+        'isVisible' => 0,
       ),
       'editLastMessage' => array(
         'name' => __('Modifier le dernier message envoyé', __FILE__),
@@ -1133,6 +1169,15 @@ class jeediscordCmd extends cmd {
         if (count($params['files']) == 0) {
           throw new Exception(__('Aucun fichier valide à envoyer', __FILE__));
         }
+        break;
+      case 'sendSummary':
+        $params['embed'] = jeediscordReport::globalEmbed();
+        break;
+      case 'sendObjectSummary':
+        $params['embed'] = jeediscordReport::objectEmbed(self::option($_options, 'message'));
+        break;
+      case 'sendBatterySummary':
+        $params['embed'] = jeediscordReport::batteryEmbed();
         break;
       case 'editLastMessage':
         $title = trim(self::option($_options, 'title'));
