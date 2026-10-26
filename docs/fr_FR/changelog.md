@@ -27,7 +27,7 @@
 - Commande « Envoyer le résumé d'un objet » : formulaire avec sélection de l'objet dans la liste des objets de Jeedom
 - Correction : le nom de l'objet (résumé d'un objet) et l'âge (nettoyage du salon) s'effaçaient à la réouverture d'un scénario
 - Documentation : procédure détaillée d'envoi des captures du plugin Caméra
-- Envoi de fichiers : une adresse web (http, https) peut remplacer le chemin d'un fichier ; elle est téléchargée dans le dossier temporaire avant l'envoi, puis supprimée
+- Envoi de fichiers : une adresse web (http, https) peut remplacer le chemin d'un fichier ; elle est téléchargée dans le dossier temporaire avant l'envoi (sous le nom `sendDiscord.<extension>`), puis supprimée
 - Documentation : présentation des fonctionnalités, section de dépannage, noms réels des paramètres des commandes slash
 - Correction : les valeurs par défaut de la configuration (port du démon, commandes slash...) n'étaient pas enregistrées à l'installation
 - Réception des messages (contenu, auteur, pièces jointes) et des réactions (emoji, auteur, ajout ou retrait)

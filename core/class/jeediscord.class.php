@@ -1341,6 +1341,7 @@ class jeediscordCmd extends cmd {
   const DOWNLOAD_MAX_SIZE = 104857600; // 100 Mo : la plus grande limite d'envoi de Discord
   const DOWNLOAD_TIMEOUT = 60;
   const DOWNLOAD_MAX_AGE = 3600;
+  const DOWNLOAD_NAME = 'sendDiscord';
 
   /**
    * Adresse sans identifiants ni paramètres, pour les logs
@@ -1352,7 +1353,7 @@ class jeediscordCmd extends cmd {
 
   /**
    * Télécharge une adresse web (http ou https) dans le dossier temporaire du plugin, avant l'envoi.
-   * Le fichier garde le nom de l'adresse ; une extension est ajoutée d'après le type du contenu si elle manque.
+   * Le fichier est nommé « sendDiscord » suivi d'une extension déduite du type du contenu (ou de l'adresse).
    * @param string $_url
    * @return string|null chemin du fichier téléchargé, null en cas d'échec (consigné dans le log)
    */
@@ -1372,15 +1373,11 @@ class jeediscordCmd extends cmd {
     $dir = $base . '/' . bin2hex(random_bytes(8));
     mkdir($dir, 0700);
     self::$downloads[] = $dir;
-    $name = urldecode(basename((string) parse_url($_url, PHP_URL_PATH)));
-    $name = trim(preg_replace('/[^\p{L}\p{N}._ -]+/u', '_', $name), '. ');
-    $name = mb_substr($name, 0, 80);
-    if ($name == '') {
-      $name = 'fichier';
-    }
-    $target = $dir . '/' . $name;
-    $handle = fopen($target, 'wb');
+    // Nom générique : l'adresse ne dit rien du contenu, et peut contenir des données sensibles ou très longues
+    $target = $dir . '/' . self::DOWNLOAD_NAME;
+    $handle = @fopen($target, 'wb');
     if ($handle === false) {
+      log::add('jeediscord', 'warning', __('Téléchargement impossible : dossier temporaire inaccessible', __FILE__) . ' : ' . $dir);
       return null;
     }
     $ch = curl_init($_url);
@@ -1409,12 +1406,12 @@ class jeediscordCmd extends cmd {
       log::add('jeediscord', 'warning', __('Téléchargement impossible', __FILE__) . ' : ' . $display . ($error != '' ? ' (' . $error . ')' : ''));
       return null;
     }
-    if (strpos($name, '.') === false) {
-      $extensions = array('image/jpeg' => 'jpg', 'image/png' => 'png', 'image/gif' => 'gif', 'image/webp' => 'webp', 'video/mp4' => 'mp4', 'application/pdf' => 'pdf', 'text/plain' => 'txt', 'audio/mpeg' => 'mp3');
-      if (isset($extensions[$type])) {
-        rename($target, $target . '.' . $extensions[$type]);
-        $target .= '.' . $extensions[$type];
-      }
+    // Extension d'après le type du contenu, à défaut d'après l'adresse
+    $extensions = array('image/jpeg' => 'jpg', 'image/png' => 'png', 'image/gif' => 'gif', 'image/webp' => 'webp', 'video/mp4' => 'mp4', 'application/pdf' => 'pdf', 'text/plain' => 'txt', 'audio/mpeg' => 'mp3', 'text/csv' => 'csv', 'application/json' => 'json', 'application/zip' => 'zip');
+    $extension = isset($extensions[$type]) ? $extensions[$type] : strtolower(pathinfo((string) parse_url($_url, PHP_URL_PATH), PATHINFO_EXTENSION));
+    if (preg_match('/^[a-z0-9]{1,5}$/', $extension)) {
+      rename($target, $target . '.' . $extension);
+      $target .= '.' . $extension;
     }
     log::add('jeediscord', 'debug', __('Fichier téléchargé', __FILE__) . ' : ' . $display . ' (' . filesize($target) . ' ' . __('octets', __FILE__) . ')');
     return $target;
