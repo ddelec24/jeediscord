@@ -1,6 +1,13 @@
-# Plugin JeeDiscord
+# Plugin JeeDiscord - BETA
 
-Le plugin **JeeDiscord** relie Jeedom à un serveur Discord grâce à un bot. Chaque équipement correspond à un salon, et le plugin permet de :
+
+![jeediscord_icon](../images/jeediscord_icon.png)
+
+> [!warning]  
+> Le bot a besoin de l'intent privilégié **Message Content** (portail développeur Discord) pour lire le contenu des messages. Sans lui, Discord refuse la connexion et le démon s'arrête : voir « Créer le bot Discord ».  
+
+
+JeeDiscord relie Jeedom à un serveur **[Discord](https://discord.com)** grâce à un bot. Chaque équipement correspond à un salon, et le plugin permet de :  
 
 - **envoyer** des messages, des embeds (messages enrichis) et des fichiers depuis les scénarios, avec mentions ;
 - **poser des questions** (action « Demander » des scénarios) avec des boutons ou un menu de réponses ;
@@ -9,15 +16,19 @@ Le plugin **JeeDiscord** relie Jeedom à un serveur Discord grâce à un bot. Ch
 - **modifier ou supprimer** des messages, **nettoyer** un salon, le **renommer** ou changer son sujet (un salon vocal peut servir d'afficheur) ;
 - envoyer des **résumés** (maison, objet, batteries) et des **alertes de surveillance** des démons et dépendances.
 
-Il s'appuie sur la bibliothèque [discord.js](https://discord.js.org/) v14 et sur l'API Discord v10.
+Il s'appuie sur la bibliothèque [discord.js](https://discord.js.org/) v14 et sur l'API Discord v10.  
 
-# Prérequis
+## Aperçu  
+
+![Actions JeeDiscord dans un scénario : message, embed, fichier, question, actions rapides](../images/scenario_actions.png)  
+
+# Prérequis  
 
 - Jeedom 4.4 minimum
 - Debian 12 minimum
 - Node.js : installé automatiquement par Jeedom lors de l'installation des dépendances
 
-# Créer le bot Discord
+# Créer le bot Discord  
 
 1. Rendez-vous sur le [portail développeur Discord](https://discord.com/developers/applications) et cliquez sur **New Application**.
 2. Dans l'onglet **Bot**, cliquez sur **Reset Token** puis copiez le token. Il ne sera plus affiché ensuite : conservez-le en lieu sûr et ne le partagez jamais.
@@ -37,11 +48,15 @@ Permissions recommandées pour le bot :
 | Manage Messages | Supprimer les messages (nettoyage) |
 | Manage Channels | Renommer un salon ou modifier son sujet |
 
-# Configuration du plugin
+# Dépendances  
 
-Après l'activation du plugin, installez les dépendances puis renseignez :
+La première étape est d'installer les dépendances : après l'activation du plugin, lancez leur installation depuis la page de configuration du plugin. Jeedom installe lui-même Node.js, puis la bibliothèque discord.js dans le dossier du plugin. Le suivi se fait dans le log `jeediscord_packages`.  
 
-- **Token du bot** : le token copié à l'étape 2. Il est chiffré dans la base Jeedom et masqué dans les logs.
+# Configuration générale  
+
+Une fois les dépendances installées, renseignez :
+
+- **Token du bot** : le token copié à l'étape 2 de la création du bot. Il est chiffré dans la base Jeedom et masqué dans les logs.
 - **Type d'activité** et **Texte d'activité** : texte affiché sous le nom du bot dans Discord (par exemple « Personnalisé » + « Surveille la maison »). Laissez le texte vide pour ne rien afficher.
 - **Commandes slash** et **Rôles autorisés** : voir « Commandes slash » plus bas.
 - **Emojis** : emojis des résumés et des batteries, voir « Résumés ».
@@ -51,7 +66,7 @@ Le **statut du bot** indique si le démon est démarré et connecté à Discord,
 
 ![Configuration du plugin](../images/plugin_config.png)
 
-# Le démon
+## Le démon  
 
 Le démon est un programme Node.js unique qui maintient la connexion avec Discord. Il est conçu pour rester léger :
 
@@ -63,7 +78,7 @@ Le démon est un programme Node.js unique qui maintient la connexion avec Discor
 
 **Connexion** : en cas de coupure réseau au démarrage, le démon retente la connexion avec un délai croissant (de 15 secondes à 5 minutes). Une fois connecté, les reconnexions sont automatiques. Si Discord refuse la connexion (token invalide, intent « Message Content » non activé), le démon s'arrête et n'est plus relancé automatiquement, afin de ne pas épuiser le quota de connexions journalier de Discord. Un message s'affiche dans le centre de messages : corrigez le problème puis sauvegardez la configuration du plugin.
 
-# Logs
+## Logs  
 
 Le plugin utilise trois logs :
 
@@ -73,7 +88,7 @@ Le plugin utilise trois logs :
 
 En niveau **Debug**, le log du démon détaille chaque requête envoyée à Discord (méthode, route, code de retour, quota restant), les limites de débit atteintes et les échanges avec Jeedom. Les informations sensibles sont systématiquement masquées (`***`) : token du bot, clé API Jeedom, jetons d'interaction et de webhook. Le token n'apparaît ni dans les logs ni dans la liste des processus du système.
 
-# Configuration des équipements
+# Configuration d'un équipement  
 
 Un équipement correspond à **un salon Discord**.
 
@@ -84,7 +99,7 @@ Un équipement correspond à **un salon Discord**.
 
 ![Équipement](../images/device_config.png)
 
-# Commandes
+## Commandes  
 
 Chaque équipement dispose des commandes suivantes, utilisables dans les scénarios :
 
@@ -114,15 +129,35 @@ Chaque équipement dispose des commandes suivantes, utilisables dans les scénar
 
 Les commandes d'envoi sont utilisées dans les **actions des scénarios** : choisissez la commande dans la liste, le formulaire correspondant s'affiche. Seule la commande « Envoyer un message » est affichée par défaut sur le dashboard ; les autres sont masquées, ce qui n'empêche pas de les utiliser dans les scénarios (elles peuvent être rendues visibles dans l'onglet Commandes de l'équipement).
 
-![Actions JeeDiscord dans un scénario : message, embed, fichier, question](../images/scenario_actions.png)
+# Scénarios  
 
-## Envoyer un message
+## Envoyer un message  
 
 Les textes de plus de 2000 caractères (limite de Discord) sont découpés automatiquement en plusieurs messages, de préférence aux retours à la ligne.
 
 Cette commande accepte aussi les fichiers transmis par Jeedom : rapports générés par l'action **Rapport** d'un scénario, captures envoyées par d'autres plugins, etc.
 
-## Envoyer un embed
+### Mentions  
+
+Dans les textes, vous pouvez mentionner :
+
+| Syntaxe | Résultat |
+|---|---|
+| `@{pseudo}` | un membre, recherché par son nom d'utilisateur, son nom d'affichage ou son surnom sur le serveur |
+| `@&{rôle}` | un rôle, recherché par son nom |
+| `#{salon}` | un lien vers un salon |
+
+La syntaxe native de Discord (`<@identifiant>`, `<@&identifiant>`) fonctionne aussi. Une mention introuvable reste affichée en texte simple. `@everyone` et `@here` ne notifient personne.
+
+La recherche des membres se fait par nom et ne nécessite pas l'intent privilégié « Server Members ».
+
+### Fonctionnement de l'envoi  
+
+L'envoi est asynchrone : le scénario continue immédiatement, et le message est placé dans la file d'attente du salon. Les messages d'un même salon partent toujours dans l'ordre. Les fichiers sont lus au moment de l'appel : vous pouvez supprimer un fichier temporaire juste après la commande.
+
+Avant d'envoyer, le plugin vérifie les droits du bot dans le salon (voir, envoyer des messages, intégrer des liens, joindre des fichiers). En cas de droit manquant ou d'échec, une erreur est inscrite dans le log `jeediscord`.
+
+## Envoyer un embed  
 
 Dans un scénario, la commande affiche un formulaire dédié, avec un champ par ligne. Le bouton en bout de ligne permet d'insérer la valeur d'une commande info de Jeedom (par exemple une température) dans les champs de texte :
 
@@ -135,7 +170,7 @@ Dans un scénario, la commande affiche un formulaire dédié, avec un champ par 
 
 Les textes trop longs sont raccourcis pour respecter les limites de Discord (6000 caractères au total par embed).
 
-## Envoyer un fichier
+## Envoyer un fichier  
 
 Indiquez le chemin complet d'un fichier, **ou son adresse web** (`http://` ou `https://`), un par ligne. Discord accepte 10 fichiers par message : au-delà, plusieurs messages sont envoyés. La taille maximale d'un fichier dépend du niveau de boost du serveur (10 Mo sans boost, 50 Mo au niveau 2, 100 Mo au niveau 3). Les fichiers trop volumineux sont ignorés et signalés dans le log.
 
@@ -143,7 +178,25 @@ Indiquez le chemin complet d'un fichier, **ou son adresse web** (`http://` ou `h
 
 Par sécurité, les fichiers de configuration de Jeedom (`core/config`), les dossiers système (`/etc`, `/root`...) et les fichiers ou dossiers cachés ne peuvent pas être envoyés.
 
-## Poser une question (action « Demander » des scénarios)
+Le champ « Fichiers » accepte aussi les variables et tags de scénario. Exemple, avec un graphique généré par un service web et envoyé dans le salon :
+
+<details markdown='1'>
+<summary>Cliquez pour voir l'exemple de bloc code</summary>
+
+```php
+// Exemple : un graphique construit par quickchart.io (service tiers), envoyé ensuite dans le salon
+$valeurs = array(0, 0.2, 1.5, 0);                         // à remplacer par vos mesures
+$config = "{type:'bar',data:{labels:['1h','2h','3h','4h'],datasets:[{label:'mm',data:[" . implode(',', $valeurs) . "]}]}}";
+$url = "https://quickchart.io/chart?format=png&c=" . urlencode($config);
+
+// Enregistre l'adresse dans une VARIABLE du scénario...
+$scenario->setData("graphiqueUrl", $url);
+```
+
+Dans l'action « Envoyer un fichier » qui suit, saisissez `variable(graphiqueUrl)` dans le champ « Fichiers ». Attention : `setData` crée une variable, lue avec `variable(...)`, alors que `tag(...)` lit les tags posés avec `$scenario->setTags(...)`.
+</details>
+
+## Poser une question (action « Demander » des scénarios)  
 
 Les commandes « Envoyer un message », « Envoyer un embed » et « Envoyer un fichier » peuvent être choisies dans l'action **Demander** d'un scénario (le champ « Commande » de l'action).
 
@@ -154,7 +207,7 @@ Dès qu'une réponse est donnée, ou à la fin du délai, les boutons sont désa
 
 Une question reste valable tant que le délai n'est pas écoulé et que le démon n'est pas redémarré : après un redémarrage, ses boutons sont simplement désactivés au prochain clic.
 
-## Résumés
+## Résumés  
 
 Trois commandes envoient un embed de synthèse, à lancer depuis un scénario (par exemple un déclenchement programmé le matin) ou depuis un bouton d'action rapide :
 
@@ -162,17 +215,12 @@ Trois commandes envoient un embed de synthèse, à lancer depuis un scénario (p
 - **Envoyer le résumé d'un objet** : les résumés de l'objet dont vous indiquez le nom dans le champ « Objet ». Le bouton en bout de ligne (icône cube) ouvre la liste des objets de Jeedom ; vous pouvez aussi saisir le nom à la main, ou une variable de scénario.
 - **Envoyer l'état des batteries** : les équipements dont la batterie est faible (en orange) ou critique (en rouge), du plus faible au plus fort, avec les seuils de Jeedom (ceux de l'équipement s'il en définit). La couleur de l'embed suit le niveau le plus bas. Si tout est bon, le message le dit.
 
-**Important** : comme dans la barre de menu de Jeedom, le résumé de la maison n'affiche que les résumés « remontés ». Dans la page de l'objet (Outils > Objets, section Résumés), définissez la commande du résumé, puis cochez **Remonter dans le résumé global** pour ce résumé ; sans cette case, il n'apparaît que dans « Envoyer le résumé d'un objet ». Si aucun résumé n'est remonté, le message le précise.
+> [!warning]  
+> Comme dans la barre de menu de Jeedom, le résumé de la maison n'affiche que les résumés « remontés ». Dans la page de l'objet (Outils > Objets, section Résumés), définissez la commande du résumé, puis cochez **Remonter dans le résumé global** pour ce résumé ; sans cette case, il n'apparaît que dans « Envoyer le résumé d'un objet ». Si aucun résumé n'est remonté, le message le précise.  
 
 Les **emojis** devant chaque résumé et chaque niveau de batterie se personnalisent dans la configuration du plugin : une ligne `clé | emoji` par emoji (clés : `temperature`, `humidity`, `luminosity`, `power`, `motion`, `security`, `door`, `windows`, `shutter`, `light`, `outlet`, `battery_ok`, `battery_warning`, `battery_danger`, `alert`, `recovery`). Une clé absente garde son emoji par défaut.
 
-## Surveillance
-
-Toutes les 5 minutes, le plugin vérifie les plugins actifs : un **démon arrêté** alors qu'il devrait tourner (gestion automatique activée et démarrage possible), ou des **dépendances en erreur**. Les salons des équipements qui ont coché « Recevoir les alertes » reçoivent alors une alerte rouge listant les pannes, puis un message vert quand tout est rentré dans l'ordre.
-
-Pour éviter les fausses alertes, une panne n'est signalée que si elle dure au moins deux vérifications (Jeedom relance lui-même les démons en panne), et une seule fois. Le démon de JeeDiscord lui-même n'est pas surveillé : s'il est arrêté, il ne peut pas écrire sur Discord.
-
-## Captures des caméras
+## Captures des caméras  
 
 C'est le plugin **Caméra** qui prend les captures et les envoie : on ne met donc **pas** de commande de caméra dans JeeDiscord, mais l'inverse. Dans une action de scénario, choisissez la commande **« Enregistrer »** de la caméra (par exemple `#[Salon][Ma caméra][Enregistrer]#`, masquée du dashboard mais disponible dans les scénarios) et renseignez ses deux champs. Attention, la commande « Capture » du plugin Caméra ne fait qu'enregistrer un fichier sur Jeedom : elle n'envoie rien.
 
@@ -183,14 +231,14 @@ Le plugin Caméra appelle alors cette commande avec les fichiers des captures, q
 
 **Texte joint aux captures** : c'est le plugin Caméra qui fournit le texte transmis à JeeDiscord. Par défaut, il envoie un texte du type « Alerte sur la caméra *nom* à *date* ». Pour le remplacer, ajoutez `message=` dans le champ « Nombre captures ou options », avec des guillemets si le texte contient des espaces : `nbSnap=1 message="Capture demandée :"`. Le paramètre `title=` n'est pas pris en compte par le plugin Caméra. Avec « Envoyer un message » comme destination, le texte est affiché au-dessus des images ; avec « Envoyer un fichier », il les accompagne.
 
-## Modifier ou supprimer le dernier message
+## Modifier ou supprimer le dernier message  
 
 Les commandes « Modifier le dernier message envoyé » et « Supprimer le dernier message envoyé » agissent sur le **dernier envoi du bot dans le salon** (message, embed, fichier, question ou actions rapides), y compris quand un long texte a été découpé en plusieurs messages (la modification porte sur la dernière partie, la suppression sur toutes). Elles sont exécutées après les envois déjà en attente : un scénario peut donc envoyer puis modifier ou supprimer aussitôt.
 
 - La modification remplace le **texte** du message ; les embeds, fichiers et boutons sont conservés. Les mentions `@{pseudo}` sont résolues comme à l'envoi.
 - Le dernier message est mémorisé par le démon : après un redémarrage du démon, il n'y a plus de message à modifier ou supprimer jusqu'au prochain envoi (une erreur est alors inscrite dans le log).
 
-## Renommer un salon, modifier son sujet
+## Renommer un salon, modifier son sujet  
 
 Les commandes « Renommer le salon » et « Modifier le sujet du salon » changent le nom et le sujet du salon de l'équipement. Le bot doit avoir le droit **Gérer les salons** (ou le rôle administrateur).
 
@@ -198,13 +246,13 @@ Les commandes « Renommer le salon » et « Modifier le sujet du salon » change
 - Un salon **vocal** accepte les espaces, les majuscules et les emojis. Il peut donc servir d'**afficheur** : créez un équipement lié à un salon vocal, et mettez à jour son nom depuis un scénario, par exemple `🌡️ Salon : #[Salon][Sonde][Température]# °C`. Le nom est limité à 100 caractères, le sujet à 1024 (et seuls les salons textuels ont un sujet).
 - **Discord limite ces changements à 2 toutes les 10 minutes par salon.** Pour ne pas bloquer, les demandes qui arrivent pendant l'attente sont fusionnées : seule la dernière valeur est envoyée. Rien n'est envoyé non plus quand le nom ou le sujet est déjà celui du salon. N'appelez donc pas ces commandes à chaque variation rapide d'une valeur : l'affichage sera simplement en retard de quelques minutes.
 
-## Nettoyer un salon
+## Nettoyer un salon  
 
-La commande « Nettoyer le salon » supprime les messages plus anciens qu'un âge (en heures ou en jours ; 0 pour tous), au choix **uniquement ceux du bot** ou **tous les messages** (droit « Gérer les messages » requis). Les messages épinglés sont toujours conservés. Le même nettoyage est lancé chaque heure pour les équipements qui ont une durée de conservation (voir « Configuration des équipements »).
+La commande « Nettoyer le salon » supprime les messages plus anciens qu'un âge (en heures ou en jours ; 0 pour tous), au choix **uniquement ceux du bot** ou **tous les messages** (droit « Gérer les messages » requis). Les messages épinglés sont toujours conservés. Le même nettoyage est lancé chaque heure pour les équipements qui ont une durée de conservation (voir « Configuration d'un équipement »).
 
 Discord ne permet la suppression en masse que pour les messages de moins de 14 jours. Les messages plus anciens sont supprimés un par un, à la cadence imposée par Discord : 100 au maximum par passage, le reste est traité au passage suivant (une ligne du log `jeediscord` le signale). Chaque passage examine au plus 1000 messages. Le nombre de messages supprimés est inscrit dans le log `jeediscord`.
 
-## Actions rapides
+## Actions rapides  
 
 La commande « Envoyer des actions rapides » envoie un message avec des boutons **qui restent actifs** (même après un redémarrage du démon). Elle s'utilise dans un scénario : ajoutez une action, puis choisissez **[Objet][Équipement][Envoyer des actions rapides]** dans la liste des commandes. Renseignez :
 
@@ -231,7 +279,7 @@ Le résultat de l'action est affiché uniquement à la personne qui a cliqué (�
 
 ![Formulaire des actions rapides](../images/scenario_quick_actions.png)
 
-## Commandes slash
+# Commandes slash  
 
 Le plugin enregistre sur chaque serveur du bot (disponibles aussitôt) deux commandes que l'on tape dans Discord en commençant par `/` :
 
@@ -244,30 +292,20 @@ Le plugin enregistre sur chaque serveur du bot (disponibles aussitôt) deux comm
 
 Les réponses ne sont visibles que par la personne qui a tapé la commande. Les noms des commandes et des paramètres sont en anglais (règle de Discord pour la saisie) ; leurs descriptions s'affichent dans la langue de Discord de l'utilisateur (français, anglais, espagnol, allemand, italien, portugais, russe).
 
-**Sécurité** : une commande slash peut piloter toute la maison. Elle n'est donc exécutée que si :
-
-- le salon est associé à un **équipement JeeDiscord actif** (ailleurs, le bot répond qu'elle n'est pas disponible) ;
-- la personne est **administrateur du serveur**, ou possède un des **rôles autorisés** de la configuration du plugin (noms ou identifiants de rôles séparés par des virgules). Tant que la liste est vide, seuls les administrateurs peuvent utiliser les commandes.
+> [!warning]  
+> Une commande slash peut piloter toute la maison. Elle n'est donc exécutée que si le salon est associé à un **équipement JeeDiscord actif** (ailleurs, le bot répond qu'elle n'est pas disponible), et si la personne est **administrateur du serveur** ou possède un des **rôles autorisés** de la configuration du plugin (noms ou identifiants de rôles séparés par des virgules). Tant que la liste est vide, seuls les administrateurs peuvent utiliser les commandes.  
 
 L'autocomplétion des scénarios et des commandes est soumise aux mêmes droits : une personne non autorisée ne voit aucune proposition. Le réglage « Commandes slash » de la configuration permet de les désactiver : elles sont alors retirées des serveurs.
 
 Si le bot n'a pas été invité avec le scope `applications.commands` (voir « Créer le bot Discord »), l'enregistrement est refusé : le log `jeediscord_daemon` l'indique, et il suffit de réinviter le bot avec l'URL corrigée. Les commandes `/jeedom` et `/clean` sont aussi visibles dans les paramètres du serveur (Intégrations), où Discord permet d'en restreindre l'usage à certains salons ou rôles en plus des droits du plugin.
 
-## Mentions
+# Surveillance  
 
-Dans les textes, vous pouvez mentionner :
+Toutes les 5 minutes, le plugin vérifie les plugins actifs : un **démon arrêté** alors qu'il devrait tourner (gestion automatique activée et démarrage possible), ou des **dépendances en erreur**. Les salons des équipements qui ont coché « Recevoir les alertes » reçoivent alors une alerte rouge listant les pannes, puis un message vert quand tout est rentré dans l'ordre.
 
-| Syntaxe | Résultat |
-|---|---|
-| `@{pseudo}` | un membre, recherché par son nom d'utilisateur, son nom d'affichage ou son surnom sur le serveur |
-| `@&{rôle}` | un rôle, recherché par son nom |
-| `#{salon}` | un lien vers un salon |
+Pour éviter les fausses alertes, une panne n'est signalée que si elle dure au moins deux vérifications (Jeedom relance lui-même les démons en panne), et une seule fois. Le démon de JeeDiscord lui-même n'est pas surveillé : s'il est arrêté, il ne peut pas écrire sur Discord.
 
-La syntaxe native de Discord (`<@identifiant>`, `<@&identifiant>`) fonctionne aussi. Une mention introuvable reste affichée en texte simple. `@everyone` et `@here` ne notifient personne.
-
-La recherche des membres se fait par nom et ne nécessite pas l'intent privilégié « Server Members ».
-
-## Réception des messages et des réactions
+# Réception des messages et des réactions  
 
 Les commandes info sont mises à jour à chaque message ou réaction reçu dans le salon, y compris quand la valeur ne change pas : un même message ou un même emoji reçu deux fois déclenche deux fois les scénarios. Le contenu du message et l'emoji sont mis à jour en dernier : un scénario déclenché par **Dernier message** lit donc l'auteur et les pièces jointes de ce même message (même principe pour **Dernière réaction**).
 
@@ -279,24 +317,73 @@ Les adresses des pièces jointes sont fournies par Discord et expirent au bout d
 
 Seuls les événements des salons associés à un équipement actif sont transmis par le démon à Jeedom.
 
-## Fonctionnement de l'envoi
+# Scripts Tiers  
 
-L'envoi est asynchrone : le scénario continue immédiatement, et le message est placé dans la file d'attente du salon. Les messages d'un même salon partent toujours dans l'ordre. Les fichiers sont lus au moment de l'appel : vous pouvez supprimer un fichier temporaire juste après la commande.
+JeeDiscord repose sur la bibliothèque **discord.js** en version *v14*.  
+Vous pouvez trouver le code github original ici : [discordjs/discord.js](https://github.com/discordjs/discord.js)  
 
-Avant d'envoyer, le plugin vérifie les droits du bot dans le salon (voir, envoyer des messages, intégrer des liens, joindre des fichiers). En cas de droit manquant ou d'échec, une erreur est inscrite dans le log `jeediscord`.
+Le plugin est conçu et dirigé par **ddelec24** (chef d'orchestre du projet) et développé avec **Claude** (Anthropic), co-auteur du code et de la documentation.  
 
-# Dépannage
+# Informations complémentaires  
 
-| Symptôme | Cause probable et solution |
-|---|---|
-| Le démon ne démarre pas, « Le token du bot n'est pas renseigné » | Saisissez le token dans la configuration du plugin puis sauvegardez. |
-| « Connexion refusée par Discord : token du bot invalide » | Le token a été réinitialisé ou mal copié : générez-en un nouveau (portail développeur, onglet Bot) et sauvegardez la configuration. |
-| « Intent Message Content non activé » | Activez **Message Content Intent** dans l'onglet Bot du portail développeur, puis sauvegardez la configuration du plugin. |
-| « Dépendances non installées » | Lancez l'installation des dépendances depuis la page du plugin et consultez le log `jeediscord_packages`. |
-| Aucun salon dans la liste de l'équipement | Le démon n'est pas connecté, ou le bot n'a pas le droit de voir les salons : vérifiez le statut du bot dans la configuration et les permissions « View Channels ». |
-| Les captures de la caméra n'arrivent pas | Utilisez la commande « Enregistrer » **de la caméra** et indiquez la commande JeeDiscord dans son champ de destination (voir « Captures des caméras »). Consultez le log `camera_record` du plugin Caméra et le log `jeediscord`. |
-| Un message n'est pas envoyé | Consultez le log `jeediscord` : un droit manquant (envoyer des messages, intégrer des liens, joindre des fichiers) y est indiqué. |
-| Les commandes slash n'apparaissent pas | Réinvitez le bot avec le scope `applications.commands`, puis redémarrez le démon. Vérifiez que « Commandes slash » est activé dans la configuration. |
-| « Ce salon n'est associé à aucun équipement JeeDiscord actif » | Les commandes slash et les boutons ne fonctionnent que dans les salons d'un équipement actif. |
-| Le résumé de la maison est vide | Cochez « Remonter dans le résumé global » pour les résumés voulus dans la page de l'objet (voir « Résumés »). |
-| Le renommage d'un salon est en retard | Discord limite les changements de nom à 2 toutes les 10 minutes par salon (voir « Renommer un salon »). |
+ - Le plugin n'a pas été testé dans toutes les configurations de serveurs Discord, de rôles et de permissions.  
+ Merci de faire un Issue sur [GitHub](https://github.com/ddelec24/jeediscord/issues) ou un message sur le forum [Community Jeedom](https://community.jeedom.com/tag/plugin-jeediscord) si jamais vous constatez un dysfonctionnement.  
+
+## Aide - FAQ  
+
+### Le démon ne démarre pas, « Le token du bot n'est pas renseigné »  
+Saisissez le token dans la configuration du plugin puis sauvegardez.  
+
+### « Connexion refusée par Discord : token du bot invalide »  
+Le token a été réinitialisé ou mal copié : générez-en un nouveau (portail développeur, onglet Bot) et sauvegardez la configuration.  
+
+### « Intent Message Content non activé »  
+Activez **Message Content Intent** dans l'onglet Bot du portail développeur, puis sauvegardez la configuration du plugin.  
+
+### « Dépendances non installées »  
+Lancez l'installation des dépendances depuis la page du plugin et consultez le log `jeediscord_packages`.  
+
+### Aucun salon dans la liste de l'équipement  
+Le démon n'est pas connecté, ou le bot n'a pas le droit de voir les salons : vérifiez le statut du bot dans la configuration et les permissions « View Channels ».  
+
+### Un message n'est pas envoyé  
+Consultez le log `jeediscord` : un droit manquant (envoyer des messages, intégrer des liens, joindre des fichiers) y est indiqué.  
+
+### Les captures de la caméra n'arrivent pas  
+Utilisez la commande « Enregistrer » **de la caméra** et indiquez la commande JeeDiscord dans son champ de destination (voir « Captures des caméras »). Consultez le log `camera_record` du plugin Caméra et le log `jeediscord`.  
+
+### Mon fichier envoyé par adresse web n'arrive pas, le champ « Fichiers » est vide  
+Le champ est évalué par Jeedom avant l'appel du plugin : vérifiez dans le log du scénario l'option `files` de la ligne « Exécution de la commande ». Si elle est vide, la variable ou le tag n'existe pas à cet endroit : une variable posée avec `setData` se lit avec `variable(nom)`, un tag posé avec `setTags` avec `tag(nom)`. Une erreur dans un bloc code qui précède (par exemple un `array_merge()` sur une valeur `null`, qui est une erreur fatale en PHP 8) empêche de poser la valeur.  
+
+### Les commandes slash n'apparaissent pas  
+Réinvitez le bot avec le scope `applications.commands`, puis redémarrez le démon. Vérifiez que « Commandes slash » est activé dans la configuration.  
+
+### « Ce salon n'est associé à aucun équipement JeeDiscord actif »  
+Les commandes slash et les boutons ne fonctionnent que dans les salons d'un équipement actif.  
+
+### Le résumé de la maison est vide  
+Cochez « Remonter dans le résumé global » pour les résumés voulus dans la page de l'objet (voir « Résumés »).  
+
+### Mon scénario se lance même quand le message ne correspond pas à ma condition (smiley, « ? »)  
+Avec un déclencheur du type `#[Salon][Discord][Dernier message]# matches "/^\s*!temp(é|e)rature\s*$/u"`, Jeedom ne met la valeur entre guillemets que si elle contient une lettre, un espace, ou si elle est vide. Un message fait uniquement de smileys ou de ponctuation donne donc une expression invalide : Jeedom la considère alors comme vraie et lance le scénario. C'est un comportement du cœur de Jeedom, pas du plugin. Pour l'éviter, placez ce bloc code en première action du scénario :
+
+```php
+$msg = cmd::byString('#[Salon][Discord][Dernier message]#')->execCmd();
+if (!preg_match('/^\s*!temp(é|e)rature\s*$/u', (string) $msg)) {
+  $scenario->setDo(false); // plus aucun bloc n'est exécuté ensuite
+  return;
+}
+```
+
+### Le renommage d'un salon est en retard  
+Discord limite les changements de nom à 2 toutes les 10 minutes par salon (voir « Renommer un salon, modifier son sujet »).  
+
+## Problèmes connus  
+
+- Discord limite le renommage d'un salon à 2 changements toutes les 10 minutes : un afficheur qui change très souvent aura quelques minutes de retard.
+- Le dernier message envoyé (pour le modifier ou le supprimer) et les questions en attente sont mémorisés par le démon : un redémarrage du démon les fait perdre.
+- Les adresses des pièces jointes reçues expirent au bout de 24 heures environ.
+- Un déclencheur de scénario avec une expression `matches` se lance à tort pour un message sans lettre (voir la FAQ ci-dessus).
+
+---------------------------------------------------------------
+Pour toutes autres questions, merci de regarder si il n'y a pas déjà une réponse à votre interrogation, sinon demandez sur le [community jeedom](https://community.jeedom.com)
