@@ -20,7 +20,7 @@ Il s'appuie sur la bibliothèque [discord.js](https://discord.js.org/) v14 et su
 
 ## Aperçu  
 
-![Actions JeeDiscord dans un scénario : message, embed, fichier, question, actions rapides](../images/scenario_actions.png)  
+![Actions JeeDiscord dans un scénario : message, embed, fichier, question, actions rapides](../images/fr_FR/overview.png)  
 
 # Prérequis  
 
@@ -64,7 +64,7 @@ Une fois les dépendances installées, renseignez :
 
 Le **statut du bot** indique si le démon est démarré et connecté à Discord, avec le nom du bot, le nombre de serveurs et la latence. La modification de l'activité est appliquée immédiatement, sans redémarrer le démon. La saisie ou la modification du token démarre ou redémarre le démon (si la gestion automatique du démon est activée), et le statut se met à jour tout seul après la sauvegarde.
 
-![Configuration du plugin](../images/plugin_config.png)
+![Configuration du plugin](../images/fr_FR/plugin_config.png)
 
 ## Le démon  
 
@@ -97,7 +97,7 @@ Un équipement correspond à **un salon Discord**.
 - **Alertes de surveillance** : cochez « Recevoir les alertes » pour que ce salon reçoive les alertes de panne (voir « Surveillance »).
 - **Nettoyage automatique** : nombre de jours pendant lesquels les messages du salon sont conservés (0 : aucun nettoyage). Les plus anciens sont supprimés automatiquement, une fois par heure, soit uniquement ceux du bot, soit tous les messages (le bot doit alors avoir le droit « Gérer les messages »). Voir « Nettoyer un salon ».
 
-![Équipement](../images/device_config.png)
+![Équipement](../images/fr_FR/device_config.png)
 
 ## Commandes  
 
@@ -125,7 +125,7 @@ Chaque équipement dispose des commandes suivantes, utilisables dans les scénar
 | Auteur de la dernière réaction | info / autre | Nom affiché de la personne qui a réagi. |
 | Dernière réaction ajoutée | info / binaire | 1 si la réaction a été ajoutée, 0 si elle a été retirée. |
 
-![Onglet Commandes](../images/device_commands.png)
+![Onglet Commandes](../images/fr_FR/device_commands.png)
 
 Les commandes d'envoi sont utilisées dans les **actions des scénarios** : choisissez la commande dans la liste, le formulaire correspondant s'affiche. Seule la commande « Envoyer un message » est affichée par défaut sur le dashboard ; les autres sont masquées, ce qui n'empêche pas de les utiliser dans les scénarios (elles peuvent être rendues visibles dans l'onglet Commandes de l'équipement).
 
@@ -277,7 +277,7 @@ Température ? | interaction | quelle est la température du salon
 
 Le résultat de l'action est affiché uniquement à la personne qui a cliqué (✅ exécuté, ⛔ rôle non autorisé, ❌ erreur : la cause est alors dans le log `jeediscord`, ⚠️ bouton qui n'est plus valide, par exemple parce que l'équipement a été désactivé ou déplacé dans un autre salon). Pour une interaction, la réponse de l'interaction est affichée. Le bouton ▶ à droite du champ « Boutons » insère un scénario choisi dans la liste, le bouton à côté insère une commande action. Un scénario lancé par un bouton reçoit les tags `#jeediscord_user#` (nom de la personne) et `#jeediscord_channel#` (identifiant du salon). Maximum : 25 boutons par message.
 
-![Formulaire des actions rapides](../images/scenario_quick_actions.png)
+![Formulaire des actions rapides](../images/fr_FR/scenario_quick_actions.png)
 
 # Commandes slash  
 

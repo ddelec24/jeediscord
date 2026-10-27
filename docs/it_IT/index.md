@@ -20,7 +20,7 @@ Si basa sulla libreria [discord.js](https://discord.js.org/) v14 e sull'API Disc
 
 ## Panoramica  
 
-![Azioni di JeeDiscord in uno scenario: messaggio, embed, file, domanda, azioni rapide](../images/scenario_actions.png)  
+![Azioni di JeeDiscord in uno scenario: messaggio, embed, file, domanda, azioni rapide](../images/it_IT/overview.png)  
 
 # Prerequisiti  
 
@@ -64,7 +64,7 @@ Una volta installate le dipendenze, compila:
 
 Lo **stato del bot** indica se il demone è avviato e connesso a Discord, con il nome del bot, il numero di server e la latenza. La modifica dell'attività viene applicata subito, senza riavviare il demone. L'inserimento o la modifica del token avvia o riavvia il demone (se la gestione automatica del demone è attivata), e lo stato si aggiorna da solo dopo il salvataggio.
 
-![Configurazione del plugin](../images/plugin_config.png)
+![Configurazione del plugin](../images/it_IT/plugin_config.png)
 
 ## Il demone  
 
@@ -97,7 +97,7 @@ Un dispositivo corrisponde a **un canale Discord**.
 - **Avvisi di monitoraggio**: spunta «Ricevi gli avvisi» perché questo canale riceva gli avvisi di guasto (vedere «Monitoraggio»).
 - **Pulizia automatica**: numero di giorni per cui i messaggi del canale vengono conservati (0: nessuna pulizia). I più vecchi vengono eliminati automaticamente, una volta all'ora, o solo quelli del bot o tutti i messaggi (il bot deve avere allora il permesso «Manage Messages»). Vedere «Pulire un canale».
 
-![Dispositivo](../images/device_config.png)
+![Dispositivo](../images/it_IT/device_config.png)
 
 ## Comandi  
 
@@ -125,7 +125,7 @@ Ogni dispositivo dispone dei seguenti comandi, utilizzabili negli scenari:
 | Autore dell'ultima reazione | info / altro | Nome visualizzato della persona che ha reagito. |
 | Ultima reazione aggiunta | info / binario | 1 se la reazione è stata aggiunta, 0 se è stata rimossa. |
 
-![Scheda Comandi](../images/device_commands.png)
+![Scheda Comandi](../images/it_IT/device_commands.png)
 
 I comandi di invio si usano nelle **azioni degli scenari**: scegli il comando nell'elenco e viene mostrato il modulo corrispondente. Solo il comando «Invia un messaggio» è mostrato per impostazione predefinita sul dashboard; gli altri sono nascosti, il che non impedisce di usarli negli scenari (possono essere resi visibili nella scheda Comandi del dispositivo).
 
@@ -277,7 +277,7 @@ Temperatura? | interaction | qual è la temperatura del soggiorno
 
 Il risultato dell'azione viene mostrato solo alla persona che ha cliccato (✅ eseguito, ⛔ ruolo non autorizzato, ❌ errore: la causa è allora nel log `jeediscord`, ⚠️ pulsante non più valido, ad esempio perché il dispositivo è stato disattivato o spostato in un altro canale). Per un'interazione, viene mostrata la risposta dell'interazione. Il pulsante ▶ a destra del campo «Pulsanti» inserisce uno scenario scelto dall'elenco, il pulsante accanto inserisce un comando azione. Uno scenario avviato da un pulsante riceve i tag `#jeediscord_user#` (nome della persona) e `#jeediscord_channel#` (ID del canale). Massimo: 25 pulsanti per messaggio.
 
-![Modulo delle azioni rapide](../images/scenario_quick_actions.png)
+![Modulo delle azioni rapide](../images/it_IT/scenario_quick_actions.png)
 
 # Comandi slash  
 

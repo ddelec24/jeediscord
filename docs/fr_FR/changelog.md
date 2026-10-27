@@ -31,4 +31,6 @@
 - Formulaire « Envoyer un embed » des scénarios redessiné : un champ par ligne, libellés alignés, listes Oui / Non à la place des cases à cocher, bouton de sélection d'une commande sur tous les champs de texte
 - Documentation : présentation des fonctionnalités, section de dépannage, noms réels des paramètres des commandes slash
 - Correction : les valeurs par défaut de la configuration (port du démon, commandes slash...) n'étaient pas enregistrées à l'installation
+- Correction : les formulaires du plugin dans les scénarios (embed, fichier, actions rapides, nettoyage, résumé d'objet) sont désormais traduits dans la langue de Jeedom
+- Documentation traduite dans les six langues du plugin, captures d'écran dans chaque langue, aperçu plus large
 - Réception des messages (contenu, auteur, pièces jointes) et des réactions (emoji, auteur, ajout ou retrait)

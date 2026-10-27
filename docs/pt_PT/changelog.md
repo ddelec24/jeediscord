@@ -31,4 +31,6 @@
 - Formulário «Enviar um embed» dos cenários redesenhado: um campo por linha, etiquetas alinhadas, listas Sim / Não em vez de caixas de seleção, botão de seleção de um comando em todos os campos de texto
 - Documentação: apresentação das funcionalidades, secção de resolução de problemas, nomes reais dos parâmetros dos comandos slash
 - Correção: os valores por omissão da configuração (porta do daemon, comandos slash...) não eram guardados na instalação
+- Correção: os formulários do plugin nos cenários (embed, ficheiro, ações rápidas, limpeza, resumo de um objeto) são agora traduzidos para a língua do Jeedom
+- Documentação traduzida nas seis línguas do plugin, capturas de ecrã em cada língua, visão geral mais larga
 - Receção de mensagens (conteúdo, autor, anexos) e de reações (emoji, autor, adição ou remoção)

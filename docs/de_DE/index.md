@@ -20,7 +20,7 @@ Es basiert auf der Bibliothek [discord.js](https://discord.js.org/) v14 und der 
 
 ## Überblick  
 
-![JeeDiscord-Aktionen in einem Szenario: Nachricht, Embed, Datei, Frage, Schnellaktionen](../images/scenario_actions.png)  
+![JeeDiscord-Aktionen in einem Szenario: Nachricht, Embed, Datei, Frage, Schnellaktionen](../images/de_DE/overview.png)  
 
 # Voraussetzungen  
 
@@ -64,7 +64,7 @@ Sobald die Abhängigkeiten installiert sind, tragen Sie ein:
 
 Der **Bot-Status** zeigt, ob der Dämon gestartet und mit Discord verbunden ist, mit dem Namen des Bots, der Anzahl der Server und der Latenz. Eine Änderung der Aktivität wird sofort übernommen, ohne den Dämon neu zu starten. Die Eingabe oder Änderung des Tokens startet den Dämon (neu), wenn die automatische Dämon-Verwaltung aktiviert ist, und der Status aktualisiert sich nach dem Speichern von selbst.
 
-![Plugin-Konfiguration](../images/plugin_config.png)
+![Plugin-Konfiguration](../images/de_DE/plugin_config.png)
 
 ## Der Dämon  
 
@@ -97,7 +97,7 @@ Ein Gerät entspricht **einem Discord-Kanal**.
 - **Überwachungsalarme**: Haken Sie „Alarme erhalten“ an, damit dieser Kanal die Störungsalarme erhält (siehe „Überwachung“).
 - **Automatische Bereinigung**: Anzahl der Tage, die die Nachrichten des Kanals aufbewahrt werden (0: keine Bereinigung). Die ältesten werden einmal pro Stunde automatisch gelöscht, entweder nur die des Bots oder alle Nachrichten (der Bot braucht dann die Berechtigung „Manage Messages“). Siehe „Einen Kanal bereinigen“.
 
-![Gerät](../images/device_config.png)
+![Gerät](../images/de_DE/device_config.png)
 
 ## Befehle  
 
@@ -125,7 +125,7 @@ Jedes Gerät verfügt über die folgenden, in Szenarien nutzbaren Befehle:
 | Autor der letzten Reaktion | Info / andere | Anzeigename der Person, die reagiert hat. |
 | Letzte Reaktion hinzugefügt | Info / binär | 1, wenn die Reaktion hinzugefügt wurde, 0, wenn sie entfernt wurde. |
 
-![Tab Befehle](../images/device_commands.png)
+![Tab Befehle](../images/de_DE/device_commands.png)
 
 Die Sendebefehle werden in den **Aktionen der Szenarien** verwendet: Wählen Sie den Befehl in der Liste, das passende Formular wird angezeigt. Nur der Befehl „Nachricht senden“ wird standardmäßig im Dashboard angezeigt; die anderen sind ausgeblendet, was ihre Verwendung in Szenarien nicht verhindert (sie können im Tab Befehle des Geräts sichtbar gemacht werden).
 
@@ -277,7 +277,7 @@ Temperatur? | interaction | wie ist die Temperatur im Wohnzimmer
 
 Das Ergebnis der Aktion wird nur der Person angezeigt, die geklickt hat (✅ ausgeführt, ⛔ Rolle nicht erlaubt, ❌ Fehler: die Ursache steht dann im Log `jeediscord`, ⚠️ Schaltfläche nicht mehr gültig, zum Beispiel weil das Gerät deaktiviert oder in einen anderen Kanal verschoben wurde). Bei einer Interaktion wird die Antwort der Interaktion angezeigt. Die Schaltfläche ▶ rechts vom Feld „Schaltflächen“ fügt ein aus der Liste gewähltes Szenario ein, die danebenliegende Schaltfläche einen Aktionsbefehl. Ein von einer Schaltfläche gestartetes Szenario erhält die Tags `#jeediscord_user#` (Name der Person) und `#jeediscord_channel#` (ID des Kanals). Maximum: 25 Schaltflächen pro Nachricht.
 
-![Formular der Schnellaktionen](../images/scenario_quick_actions.png)
+![Formular der Schnellaktionen](../images/de_DE/scenario_quick_actions.png)
 
 # Slash-Befehle  
 

@@ -20,7 +20,7 @@ Se basa en la biblioteca [discord.js](https://discord.js.org/) v14 y en la API d
 
 ## Vista general  
 
-![Acciones de JeeDiscord en un escenario: mensaje, embed, archivo, pregunta, acciones rápidas](../images/scenario_actions.png)  
+![Acciones de JeeDiscord en un escenario: mensaje, embed, archivo, pregunta, acciones rápidas](../images/es_ES/overview.png)  
 
 # Requisitos previos  
 
@@ -64,7 +64,7 @@ Una vez instaladas las dependencias, rellene:
 
 El **estado del bot** indica si el demonio está iniciado y conectado a Discord, con el nombre del bot, el número de servidores y la latencia. El cambio de actividad se aplica inmediatamente, sin reiniciar el demonio. Introducir o modificar el token inicia o reinicia el demonio (si la gestión automática del demonio está activada), y el estado se actualiza solo tras guardar.
 
-![Configuración del plugin](../images/plugin_config.png)
+![Configuración del plugin](../images/es_ES/plugin_config.png)
 
 ## El demonio  
 
@@ -97,7 +97,7 @@ Un equipo corresponde a **un canal de Discord**.
 - **Alertas de supervisión**: marque «Recibir las alertas» para que este canal reciba las alertas de avería (ver «Supervisión»).
 - **Limpieza automática**: número de días que se conservan los mensajes del canal (0: sin limpieza). Los más antiguos se eliminan automáticamente, una vez por hora, ya sean solo los del bot o todos los mensajes (el bot necesita entonces el permiso «Manage Messages»). Ver «Limpiar un canal».
 
-![Equipo](../images/device_config.png)
+![Equipo](../images/es_ES/device_config.png)
 
 ## Comandos  
 
@@ -125,7 +125,7 @@ Cada equipo dispone de los siguientes comandos, utilizables en los escenarios:
 | Autor de la última reacción | info / otro | Nombre mostrado de la persona que ha reaccionado. |
 | Última reacción añadida | info / binario | 1 si la reacción se ha añadido, 0 si se ha retirado. |
 
-![Pestaña Comandos](../images/device_commands.png)
+![Pestaña Comandos](../images/es_ES/device_commands.png)
 
 Los comandos de envío se utilizan en las **acciones de los escenarios**: elija el comando en la lista y se muestra el formulario correspondiente. Solo el comando «Enviar un mensaje» se muestra por defecto en el dashboard; los demás están ocultos, lo que no impide utilizarlos en los escenarios (pueden hacerse visibles en la pestaña Comandos del equipo).
 
@@ -277,7 +277,7 @@ Lanzar el riego | scenario | [Jardín][Ninguno][Riego] | Familia, Admin
 
 El resultado de la acción se muestra únicamente a la persona que ha hecho clic (✅ ejecutado, ⛔ rol no autorizado, ❌ error: la causa está entonces en el log `jeediscord`, ⚠️ botón que ya no es válido, por ejemplo porque el equipo se ha desactivado o movido a otro canal). Para una interacción, se muestra la respuesta de la interacción. El botón ▶ a la derecha del campo «Botones» inserta un escenario elegido de la lista, el botón contiguo inserta un comando de acción. Un escenario lanzado por un botón recibe los tags `#jeediscord_user#` (nombre de la persona) y `#jeediscord_channel#` (ID del canal). Máximo: 25 botones por mensaje.
 
-![Formulario de las acciones rápidas](../images/scenario_quick_actions.png)
+![Formulario de las acciones rápidas](../images/es_ES/scenario_quick_actions.png)
 
 # Comandos slash  
 

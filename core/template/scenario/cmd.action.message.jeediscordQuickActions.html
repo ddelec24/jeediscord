@@ -1,19 +1,19 @@
 <!--template/scenario/cmd.action.message.jeediscordQuickActions (plugin jeediscord)-->
 <div class="input-group input-group-sm" style="width:100%">
-	<span class="input-group-addon roundedLeft" style="width:110px">{{Message}}</span>
-	<textarea class="expressionAttr form-control ta_autosize" data-l1key="options" data-l2key="message" rows="1" style="resize:vertical" data-uid="#uid#" placeholder="{{Texte affiché au-dessus des boutons}}">#message#</textarea>
+	<span class="input-group-addon roundedLeft" style="width:110px">[[Message]]</span>
+	<textarea class="expressionAttr form-control ta_autosize" data-l1key="options" data-l2key="message" rows="1" style="resize:vertical" data-uid="#uid#" placeholder="[[Texte affiché au-dessus des boutons]]">#message#</textarea>
 	<span class="input-group-addon hasBtn roundedRight">
-		<button class="btn btn-default roundedRight jeediscordListCmd" type="button" title="{{Sélectionner une commande info}}" data-uid="#uid#"><i class="fas fa-list-alt"></i></button>
+		<button class="btn btn-default roundedRight jeediscordListCmd" type="button" title="[[Sélectionner une commande info]]" data-uid="#uid#"><i class="fas fa-list-alt"></i></button>
 	</span>
 </div>
 <div class="input-group input-group-sm" style="width:100%;padding-top:1px">
-	<span class="input-group-addon roundedLeft" style="width:110px">{{Boutons}}</span>
-	<textarea class="expressionAttr form-control ta_autosize" data-l1key="options" data-l2key="buttons" rows="3" style="resize:vertical" data-uid="#uid#" placeholder="{{Un bouton par ligne : Libellé | cmd, scenario ou interaction | cible | rôles autorisés (optionnel) | couleur (optionnel)}}">#buttons#</textarea>
+	<span class="input-group-addon roundedLeft" style="width:110px">[[Boutons]]</span>
+	<textarea class="expressionAttr form-control ta_autosize" data-l1key="options" data-l2key="buttons" rows="3" style="resize:vertical" data-uid="#uid#" placeholder="[[Un bouton par ligne : Libellé | cmd, scenario ou interaction | cible | rôles autorisés (optionnel) | couleur (optionnel)]]">#buttons#</textarea>
 	<span class="input-group-addon hasBtn">
-		<button class="btn btn-default jeediscordListScenario" type="button" title="{{Sélectionner un scénario}}" data-uid="#uid#"><i class="fas fa-play"></i></button>
+		<button class="btn btn-default jeediscordListScenario" type="button" title="[[Sélectionner un scénario]]" data-uid="#uid#"><i class="fas fa-play"></i></button>
 	</span>
 	<span class="input-group-addon hasBtn roundedRight">
-		<button class="btn btn-default roundedRight jeediscordListAction" type="button" title="{{Sélectionner une commande action}}" data-uid="#uid#"><i class="fas fa-cogs"></i></button>
+		<button class="btn btn-default roundedRight jeediscordListAction" type="button" title="[[Sélectionner une commande action]]" data-uid="#uid#"><i class="fas fa-cogs"></i></button>
 	</span>
 </div>
 <script>
@@ -34,13 +34,13 @@
 		root.querySelector('.jeediscordListAction').addEventListener('click', function() {
 			var target = root.querySelector('.expressionAttr[data-l2key="buttons"]')
 			jeedom.cmd.getSelectModal({ cmd: { type: 'action' } }, function(result) {
-				target.insertAtCursor('{{Libellé}} | cmd | ' + result.human)
+				target.insertAtCursor('[[Libellé]] | cmd | ' + result.human)
 			})
 		})
 		root.querySelector('.jeediscordListScenario').addEventListener('click', function() {
 			var target = root.querySelector('.expressionAttr[data-l2key="buttons"]')
 			jeedom.scenario.getSelectModal({}, function(result) {
-				target.insertAtCursor('{{Libellé}} | scenario | ' + result.human)
+				target.insertAtCursor('[[Libellé]] | scenario | ' + result.human)
 			})
 		})
 	})()

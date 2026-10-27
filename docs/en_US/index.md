@@ -20,7 +20,7 @@ It relies on the [discord.js](https://discord.js.org/) v14 library and on the Di
 
 ## Overview  
 
-![JeeDiscord actions in a scenario: message, embed, file, question, quick actions](../images/scenario_actions.png)  
+![JeeDiscord actions in a scenario: message, embed, file, question, quick actions](../images/en_US/overview.png)  
 
 # Requirements  
 
@@ -64,7 +64,7 @@ Once the dependencies are installed, fill in:
 
 The **bot status** tells whether the daemon is started and connected to Discord, with the bot's name, the number of servers and the latency. A change of activity is applied immediately, without restarting the daemon. Entering or changing the token starts or restarts the daemon (if the automatic daemon management is enabled), and the status updates by itself after saving.
 
-![Plugin configuration](../images/plugin_config.png)
+![Plugin configuration](../images/en_US/plugin_config.png)
 
 ## The daemon  
 
@@ -97,7 +97,7 @@ An equipment matches **one Discord channel**.
 - **Monitoring alerts**: tick "Receive alerts" so that this channel receives the failure alerts (see "Monitoring").
 - **Automatic cleanup**: number of days the channel's messages are kept (0: no cleanup). The oldest ones are deleted automatically, once an hour, either only the bot's or all messages (the bot then needs the "Manage Messages" permission). See "Clean a channel".
 
-![Equipment](../images/device_config.png)
+![Equipment](../images/en_US/device_config.png)
 
 ## Commands  
 
@@ -125,7 +125,7 @@ Each equipment has the following commands, usable in scenarios:
 | Last reaction author | info / other | Display name of the person who reacted. |
 | Last reaction added | info / binary | 1 if the reaction was added, 0 if it was removed. |
 
-![Commands tab](../images/device_commands.png)
+![Commands tab](../images/en_US/device_commands.png)
 
 The sending commands are used in **scenario actions**: choose the command in the list and the matching form is displayed. Only the "Send a message" command is displayed by default on the dashboard; the others are hidden, which does not prevent using them in scenarios (they can be made visible in the equipment's Commands tab).
 
@@ -277,7 +277,7 @@ Temperature? | interaction | what is the living room temperature
 
 The result of the action is displayed only to the person who clicked (✅ done, ⛔ role not allowed, ❌ error: the cause is then in the `jeediscord` log, ⚠️ button no longer valid, for example because the equipment was disabled or moved to another channel). For an interaction, the interaction's answer is displayed. The ▶ button on the right of the "Buttons" field inserts a scenario chosen from the list, the button next to it inserts an action command. A scenario started by a button receives the tags `#jeediscord_user#` (the person's name) and `#jeediscord_channel#` (the channel's ID). Maximum: 25 buttons per message.
 
-![Quick actions form](../images/scenario_quick_actions.png)
+![Quick actions form](../images/en_US/scenario_quick_actions.png)
 
 # Slash commands  
 

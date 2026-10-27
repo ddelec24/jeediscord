@@ -20,7 +20,7 @@ Baseia-se na biblioteca [discord.js](https://discord.js.org/) v14 e na API do Di
 
 ## Visão geral  
 
-![Ações do JeeDiscord num cenário: mensagem, embed, ficheiro, pergunta, ações rápidas](../images/scenario_actions.png)  
+![Ações do JeeDiscord num cenário: mensagem, embed, ficheiro, pergunta, ações rápidas](../images/pt_PT/overview.png)  
 
 # Pré-requisitos  
 
@@ -64,7 +64,7 @@ Depois de instaladas as dependências, preencha:
 
 O **estado do bot** indica se o daemon está iniciado e ligado ao Discord, com o nome do bot, o número de servidores e a latência. A alteração da atividade é aplicada imediatamente, sem reiniciar o daemon. A introdução ou a alteração do token inicia ou reinicia o daemon (se a gestão automática do daemon estiver ativada), e o estado atualiza-se sozinho após a gravação.
 
-![Configuração do plugin](../images/plugin_config.png)
+![Configuração do plugin](../images/pt_PT/plugin_config.png)
 
 ## O daemon  
 
@@ -97,7 +97,7 @@ Um equipamento corresponde a **um canal Discord**.
 - **Alertas de monitorização**: marque «Receber os alertas» para que este canal receba os alertas de avaria (ver «Monitorização»).
 - **Limpeza automática**: número de dias durante os quais as mensagens do canal são mantidas (0: sem limpeza). As mais antigas são eliminadas automaticamente, uma vez por hora, quer apenas as do bot quer todas as mensagens (o bot precisa então da permissão «Manage Messages»). Ver «Limpar um canal».
 
-![Equipamento](../images/device_config.png)
+![Equipamento](../images/pt_PT/device_config.png)
 
 ## Comandos  
 
@@ -125,7 +125,7 @@ Cada equipamento dispõe dos seguintes comandos, utilizáveis nos cenários:
 | Autor da última reação | info / outro | Nome apresentado da pessoa que reagiu. |
 | Última reação adicionada | info / binário | 1 se a reação foi adicionada, 0 se foi removida. |
 
-![Separador Comandos](../images/device_commands.png)
+![Separador Comandos](../images/pt_PT/device_commands.png)
 
 Os comandos de envio utilizam-se nas **ações dos cenários**: escolha o comando na lista e o formulário correspondente é apresentado. Apenas o comando «Enviar uma mensagem» é apresentado por omissão no dashboard; os outros estão ocultos, o que não impede de os utilizar nos cenários (podem ser tornados visíveis no separador Comandos do equipamento).
 
@@ -277,7 +277,7 @@ Temperatura? | interaction | qual é a temperatura da sala
 
 O resultado da ação é apresentado apenas à pessoa que clicou (✅ executado, ⛔ função não autorizada, ❌ erro: a causa está então no log `jeediscord`, ⚠️ botão que já não é válido, por exemplo porque o equipamento foi desativado ou movido para outro canal). Para uma interação, é apresentada a resposta da interação. O botão ▶ à direita do campo «Botões» insere um cenário escolhido na lista, o botão ao lado insere um comando de ação. Um cenário lançado por um botão recebe os tags `#jeediscord_user#` (nome da pessoa) e `#jeediscord_channel#` (ID do canal). Máximo: 25 botões por mensagem.
 
-![Formulário das ações rápidas](../images/scenario_quick_actions.png)
+![Formulário das ações rápidas](../images/pt_PT/scenario_quick_actions.png)
 
 # Comandos slash  
 

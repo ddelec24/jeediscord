@@ -31,4 +31,6 @@
 - Formular „Embed senden“ der Szenarien neu gestaltet: ein Feld pro Zeile, ausgerichtete Beschriftungen, Ja / Nein-Listen statt Kontrollkästchen, Schaltfläche zur Befehlsauswahl in allen Textfeldern
 - Dokumentation: Vorstellung der Funktionen, Abschnitt zur Fehlerbehebung, tatsächliche Namen der Parameter der Slash-Befehle
 - Korrektur: Die Standardwerte der Konfiguration (Port des Dämons, Slash-Befehle...) wurden bei der Installation nicht gespeichert
+- Korrektur: Die Formulare des Plugins in den Szenarien (Embed, Datei, Schnellaktionen, Bereinigung, Objektzusammenfassung) werden jetzt in die Sprache von Jeedom übersetzt
+- Dokumentation in die sechs Sprachen des Plugins übersetzt, Screenshots in jeder Sprache, breitere Übersicht
 - Empfang von Nachrichten (Inhalt, Autor, Anhänge) und Reaktionen (Emoji, Autor, Hinzufügen oder Entfernen)

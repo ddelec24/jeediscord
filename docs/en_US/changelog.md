@@ -31,4 +31,6 @@
 - Scenario "Send an embed" form redesigned: one field per line, aligned labels, Yes / No lists instead of check boxes, command selection button on all text fields
 - Documentation: presentation of the features, troubleshooting section, real names of the slash command parameters
 - Fix: the configuration default values (daemon port, slash commands...) were not saved at installation
+- Fix: the plugin's forms in scenarios (embed, file, quick actions, cleanup, object summary) are now translated into Jeedom's language
+- Documentation translated into the plugin's six languages, screenshots in each language, wider overview
 - Receiving messages (content, author, attachments) and reactions (emoji, author, addition or removal)

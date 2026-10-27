@@ -1124,6 +1124,23 @@ class jeediscordCmd extends cmd {
     return true;
   }
 
+  /**
+   * Formulaire d'une commande dans les scénarios. Le core ne traduit que ses propres chaînes dans les modèles de
+   * commande (les clés de traduction d'un plugin ne correspondent pas à son nom de fichier virtuel) : les modèles du
+   * plugin marquent donc leurs textes [[ainsi]], et ils sont traduits ici avec le dictionnaire du plugin.
+   */
+  public function toHtml($_version = 'dashboard', $_options = '') {
+    $html = parent::toHtml($_version, $_options);
+    if (!is_string($html) || strpos($html, '[[') === false) {
+      return $html;
+    }
+    $parts = explode('::', (string) $this->getTemplate($_version, ''));
+    $file = 'plugins/jeediscord/core/template/' . $_version . '/cmd.' . $this->getType() . '.' . $this->getSubType() . '.' . end($parts) . '.html';
+    return preg_replace_callback('/\[\[(.+?)\]\]/s', function ($matches) use ($file) {
+      return translate::sentence($matches[1], $file);
+    }, $html);
+  }
+
   // Exécution d'une commande
   public function execute($_options = array()) {
     $eqLogic = $this->getEqLogic();

@@ -31,4 +31,6 @@
 - Modulo «Invia un embed» degli scenari ridisegnato: un campo per riga, etichette allineate, elenchi Sì / No al posto delle caselle, pulsante di selezione di un comando su tutti i campi di testo
 - Documentazione: presentazione delle funzioni, sezione di risoluzione dei problemi, nomi reali dei parametri dei comandi slash
 - Correzione: i valori predefiniti della configurazione (porta del demone, comandi slash...) non venivano salvati all'installazione
+- Correzione: i moduli del plugin negli scenari (embed, file, azioni rapide, pulizia, riepilogo di un oggetto) sono ora tradotti nella lingua di Jeedom
+- Documentazione tradotta nelle sei lingue del plugin, schermate in ogni lingua, panoramica più ampia
 - Ricezione di messaggi (contenuto, autore, allegati) e reazioni (emoji, autore, aggiunta o rimozione)

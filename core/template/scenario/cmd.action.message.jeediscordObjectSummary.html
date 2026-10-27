@@ -1,9 +1,9 @@
 <!--template/scenario/cmd.action.message.jeediscordObjectSummary (plugin jeediscord)-->
 <div class="input-group input-group-sm" style="width:100%">
-	<span class="input-group-addon roundedLeft" style="width:110px">{{Objet}}</span>
-	<input class="expressionAttr form-control input-sm" data-l1key="options" data-l2key="message" value="#message#" data-uid="#uid#" placeholder="{{Nom de l'objet}}">
+	<span class="input-group-addon roundedLeft" style="width:110px">[[Objet]]</span>
+	<input class="expressionAttr form-control input-sm" data-l1key="options" data-l2key="message" value="#message#" data-uid="#uid#" placeholder="[[Nom de l'objet]]">
 	<span class="input-group-addon hasBtn roundedRight">
-		<button class="btn btn-default roundedRight jeediscordListObject" type="button" title="{{Sélectionner un objet}}" data-uid="#uid#"><i class="fas fa-cube"></i></button>
+		<button class="btn btn-default roundedRight jeediscordListObject" type="button" title="[[Sélectionner un objet]]" data-uid="#uid#"><i class="fas fa-cube"></i></button>
 	</span>
 </div>
 <script>
@@ -22,7 +22,7 @@
 						options.push({ text: object.name, value: object.name })
 					})
 					jeeDialog.prompt({
-						title: '{{Sélectionner un objet}}',
+						title: '[[Sélectionner un objet]]',
 						inputType: 'select',
 						inputOptions: options,
 						callback: function(result) {
