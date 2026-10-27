@@ -440,15 +440,19 @@ class jeediscord extends eqLogic {
       $scenario = scenario::byId($target);
     } else {
       $scenario = null;
-      $candidates = array('#' . $target . '#');
-      // [Groupe][Nom] : le nom complet est [Groupe][Objet][Nom], avec « Aucun » sans objet
+      // [Groupe][Nom] : le nom complet est [Groupe][Objet][Nom] (« Aucun » traduit par le core sans objet).
+      // On cherche par groupe et par nom, sans dépendre de la langue de l'interface
       if (preg_match('/^\[([^\]]+)\]\[([^\]]+)\]$/', $target, $matches)) {
-        array_unshift($candidates, '#[' . $matches[1] . '][' . __('Aucun', __FILE__) . '][' . $matches[2] . ']#');
+        foreach (scenario::all() as $candidate) {
+          if (mb_strtolower($candidate->getName()) === mb_strtolower($matches[2]) && mb_strtolower($candidate->getGroup()) === mb_strtolower($matches[1])) {
+            $scenario = $candidate;
+            break;
+          }
+        }
       }
-      foreach ($candidates as $candidate) {
+      if (!is_object($scenario)) {
         try {
-          $scenario = scenario::byString($candidate);
-          break;
+          $scenario = scenario::byString('#' . $target . '#');
         } catch (Exception $e) {
           $scenario = null;
         }
