@@ -124,14 +124,14 @@ Cette commande accepte aussi les fichiers transmis par Jeedom : rapports génér
 
 ## Envoyer un embed
 
-Dans un scénario, la commande affiche un formulaire dédié :
+Dans un scénario, la commande affiche un formulaire dédié, avec un champ par ligne :
 
-- **Titre** et **Lien** : le lien rend le titre cliquable ;
+- **Titre** et **Lien du titre** : le lien rend le titre cliquable ;
 - **Description** : texte principal (4096 caractères maximum) ;
-- **Champs** : un champ par ligne, sous la forme `Nom | Valeur` (25 champs maximum). Cochez **En ligne** pour les afficher côte à côte ;
+- **Champs** : un champ par ligne, sous la forme `Nom | Valeur` (25 champs maximum). **Champs côte à côte** (Oui ou Non) les affiche en colonnes ;
 - **Image** : adresse web d'une image, ou chemin d'un fichier image sur Jeedom, qui est alors joint au message. **Miniature** : adresse web d'une petite image affichée en haut à droite ;
-- **Pied de page**, **Horodatage** (date et heure d'envoi) et **Couleur** (sinon, la couleur de l'équipement) ;
-- **Texte** : texte affiché au-dessus de l'embed. Les mentions placées dans un embed ne déclenchent pas de notification : placez-les ici pour prévenir quelqu'un.
+- **Pied de page** ; **Horodatage** (Oui : date et heure d'envoi) ; **Couleur** (le sélecteur ou un code `#RRGGBB`, sinon la couleur de l'équipement) ;
+- **Texte au-dessus** : texte affiché au-dessus de l'embed. Les mentions placées dans un embed ne déclenchent pas de notification : placez-les ici pour prévenir quelqu'un.
 
 Les textes trop longs sont raccourcis pour respecter les limites de Discord (6000 caractères au total par embed).
 

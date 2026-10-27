@@ -1,57 +1,72 @@
 <!--template/scenario/cmd.action.message.jeediscordEmbed (plugin jeediscord)-->
 	<div class="input-group input-group-sm" style="width:100%">
-		<span class="input-group-addon roundedLeft" style="width:110px">{{Titre}}</span>
-		<input class="expressionAttr form-control input-sm" data-l1key="options" data-l2key="title" value="#title#" data-uid="#uid#" placeholder="{{Titre de l'embed}}">
-		<span class="input-group-addon" style="width:60px">{{Lien}}</span>
+		<span class="input-group-addon roundedLeft" style="width:130px">{{Titre}}</span>
+		<input class="expressionAttr form-control input-sm roundedRight" data-l1key="options" data-l2key="title" value="#title#" data-uid="#uid#" placeholder="{{Titre de l'embed}}">
+	</div>
+	<div class="input-group input-group-sm" style="width:100%;padding-top:2px">
+		<span class="input-group-addon roundedLeft" style="width:130px">{{Lien du titre}}</span>
 		<input class="expressionAttr form-control input-sm roundedRight" data-l1key="options" data-l2key="url" value="#url#" data-uid="#uid#" placeholder="https://...">
 	</div>
-	<div class="input-group input-group-sm" style="width:100%;padding-top:1px">
-		<span class="input-group-addon roundedLeft" style="width:110px">{{Description}}</span>
-		<textarea class="expressionAttr form-control ta_autosize" data-l1key="options" data-l2key="message" rows="2" style="resize:vertical" data-uid="#uid#" placeholder="{{Texte principal}} (@{pseudo}, @&amp;{rôle}, #{salon})">#message#</textarea>
+	<div class="input-group input-group-sm" style="width:100%;padding-top:2px">
+		<span class="input-group-addon roundedLeft" style="width:130px">{{Description}}</span>
+		<textarea class="expressionAttr form-control ta_autosize" data-l1key="options" data-l2key="message" rows="3" style="resize:vertical" data-uid="#uid#" placeholder="{{Texte principal}} (@{pseudo}, @&amp;{rôle}, #{salon})">#message#</textarea>
 		<span class="input-group-addon hasBtn roundedRight">
 			<button class="btn btn-default roundedRight jeediscordListCmd" type="button" title="{{Sélectionner une commande}}" data-uid="#uid#" data-target="message"><i class="fas fa-list-alt"></i></button>
 		</span>
 	</div>
-	<div class="input-group input-group-sm" style="width:100%;padding-top:1px">
-		<span class="input-group-addon roundedLeft" style="width:110px">{{Champs}}</span>
-		<textarea class="expressionAttr form-control ta_autosize" data-l1key="options" data-l2key="fields" rows="1" style="resize:vertical" data-uid="#uid#" placeholder="{{Un champ par ligne : Nom | Valeur}}">#fields#</textarea>
-		<span class="input-group-addon hasBtn">
-			<button class="btn btn-default jeediscordListCmd" type="button" title="{{Sélectionner une commande}}" data-uid="#uid#" data-target="fields"><i class="fas fa-list-alt"></i></button>
+	<div class="input-group input-group-sm" style="width:100%;padding-top:2px">
+		<span class="input-group-addon roundedLeft" style="width:130px">{{Champs}}</span>
+		<textarea class="expressionAttr form-control ta_autosize" data-l1key="options" data-l2key="fields" rows="2" style="resize:vertical" data-uid="#uid#" placeholder="{{Un champ par ligne : Nom | Valeur}}">#fields#</textarea>
+		<span class="input-group-addon hasBtn roundedRight">
+			<button class="btn btn-default roundedRight jeediscordListCmd" type="button" title="{{Sélectionner une commande}}" data-uid="#uid#" data-target="fields"><i class="fas fa-list-alt"></i></button>
 		</span>
-		<span class="input-group-addon" title="{{Afficher les champs côte à côte}}">{{En ligne}}</span>
-		<input type="checkbox" class="expressionAttr" data-l1key="options" data-l2key="fieldsInline" data-uid="#uid#" style="margin:0 8px">
 	</div>
-	<div class="input-group input-group-sm" style="width:100%;padding-top:1px">
-		<span class="input-group-addon roundedLeft" style="width:110px">{{Image}}</span>
-		<input class="expressionAttr form-control input-sm" data-l1key="options" data-l2key="image" value="#image#" data-uid="#uid#" placeholder="{{URL ou chemin d'un fichier image}}">
-		<span class="input-group-addon" style="width:80px">{{Miniature}}</span>
+	<div class="input-group input-group-sm" style="width:100%;padding-top:2px">
+		<span class="input-group-addon roundedLeft" style="width:130px">{{Champs côte à côte}}</span>
+		<select class="expressionAttr form-control input-sm roundedRight" data-l1key="options" data-l2key="fieldsInline" data-uid="#uid#">
+			<option value="0">{{Non}}</option>
+			<option value="1">{{Oui}}</option>
+		</select>
+	</div>
+	<div class="input-group input-group-sm" style="width:100%;padding-top:2px">
+		<span class="input-group-addon roundedLeft" style="width:130px">{{Image}}</span>
+		<input class="expressionAttr form-control input-sm roundedRight" data-l1key="options" data-l2key="image" value="#image#" data-uid="#uid#" placeholder="{{URL ou chemin d'un fichier image}}">
+	</div>
+	<div class="input-group input-group-sm" style="width:100%;padding-top:2px">
+		<span class="input-group-addon roundedLeft" style="width:130px">{{Miniature}}</span>
 		<input class="expressionAttr form-control input-sm roundedRight" data-l1key="options" data-l2key="thumbnail" value="#thumbnail#" data-uid="#uid#" placeholder="{{URL}}">
 	</div>
-	<div class="input-group input-group-sm" style="width:100%;padding-top:1px">
-		<span class="input-group-addon roundedLeft" style="width:110px">{{Pied de page}}</span>
-		<input class="expressionAttr form-control input-sm" data-l1key="options" data-l2key="footer" value="#footer#" data-uid="#uid#">
-		<span class="input-group-addon" title="{{Ajoute la date et l'heure d'envoi}}">
-			{{Horodatage}}
-		</span>
-		<input type="checkbox" class="expressionAttr" data-l1key="options" data-l2key="timestamp" data-uid="#uid#" style="margin:0 8px">
-		<span class="input-group-addon" style="width:70px">{{Couleur}}</span>
-		<input type="color" class="form-control input-sm jeediscordColorPicker" data-uid="#uid#" style="width:50px">
-		<input class="expressionAttr form-control input-sm roundedRight" data-l1key="options" data-l2key="color" value="#color#" data-uid="#uid#" style="width:90px" placeholder="{{Défaut}}">
+	<div class="input-group input-group-sm" style="width:100%;padding-top:2px">
+		<span class="input-group-addon roundedLeft" style="width:130px">{{Pied de page}}</span>
+		<input class="expressionAttr form-control input-sm roundedRight" data-l1key="options" data-l2key="footer" value="#footer#" data-uid="#uid#">
 	</div>
-	<div class="input-group input-group-sm" style="width:100%;padding-top:1px">
-		<span class="input-group-addon roundedLeft" style="width:110px">{{Texte}}</span>
+	<div class="input-group input-group-sm" style="width:100%;padding-top:2px">
+		<span class="input-group-addon roundedLeft" style="width:130px">{{Horodatage}}</span>
+		<select class="expressionAttr form-control input-sm roundedRight" data-l1key="options" data-l2key="timestamp" data-uid="#uid#">
+			<option value="0">{{Non}}</option>
+			<option value="1">{{Oui}}</option>
+		</select>
+	</div>
+	<div class="input-group input-group-sm" style="width:100%;padding-top:2px">
+		<span class="input-group-addon roundedLeft" style="width:130px">{{Couleur}}</span>
+		<input type="color" class="form-control input-sm cursor jeediscordColorPicker" data-uid="#uid#" style="width:15%;display:inline-block;padding:2px 4px">
+		<input class="expressionAttr form-control input-sm roundedRight" data-l1key="options" data-l2key="color" value="#color#" data-uid="#uid#" style="width:85%" placeholder="{{Par défaut : couleur de l'équipement}}">
+	</div>
+	<div class="input-group input-group-sm" style="width:100%;padding-top:2px">
+		<span class="input-group-addon roundedLeft" style="width:130px">{{Texte au-dessus}}</span>
 		<input class="expressionAttr form-control input-sm roundedRight" data-l1key="options" data-l2key="content" value="#content#" data-uid="#uid#" placeholder="{{Texte affiché au-dessus de l'embed (optionnel, pour notifier avec une mention)}}">
 	</div>
 <script>
 	(function() {
 		var uid = '#uid#'
-		// Pas de conteneur ni de label autour des cases : le core ne lit que les champs situés à 3 niveaux au plus sous l'action
+		// Pas de conteneur : le core ne lit que les champs situés à 3 niveaux au plus sous l'action
 		var root = document.querySelector('.expressionAttr[data-l2key="title"][data-uid="' + uid + '"]').closest('.expressionOptions')
 		// Options jamais renseignées : le core laisse le marqueur #option# en place
 		root.querySelectorAll('.expressionAttr[data-l1key="options"]').forEach(function(el) {
 			var key = el.getAttribute('data-l2key')
-			if (el.type == 'checkbox') {
-				el.checked = ({ fieldsInline: '#fieldsInline#', timestamp: '#timestamp#' })[key] == '1'
+			if (el.tagName == 'SELECT') {
+				var saved = ({ fieldsInline: '#fieldsInline#', timestamp: '#timestamp#' })[key]
+				el.value = (saved == '1' || saved == 'true') ? '1' : '0'
 			} else if (el.value == '#' + key + '#') {
 				el.value = ''
 			}
