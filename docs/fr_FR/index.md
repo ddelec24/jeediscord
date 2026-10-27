@@ -124,7 +124,7 @@ Cette commande accepte aussi les fichiers transmis par Jeedom : rapports génér
 
 ## Envoyer un embed
 
-Dans un scénario, la commande affiche un formulaire dédié, avec un champ par ligne :
+Dans un scénario, la commande affiche un formulaire dédié, avec un champ par ligne. Le bouton en bout de ligne permet d'insérer la valeur d'une commande info de Jeedom (par exemple une température) dans les champs de texte :
 
 - **Titre** et **Lien du titre** : le lien rend le titre cliquable ;
 - **Description** : texte principal (4096 caractères maximum) ;

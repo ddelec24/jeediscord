@@ -145,10 +145,10 @@
     "plugins\/jeediscord\/core\/template\/scenario\/cmd.action.message.jeediscordEmbed.html": {
         "Titre": "Título",
         "Titre de l'embed": "Título do embed",
+        "Sélectionner une commande": "Selecionar um comando",
         "Lien du titre": "Ligação do título",
         "Description": "Descrição",
         "Texte principal": "Texto principal",
-        "Sélectionner une commande": "Selecionar um comando",
         "Champs": "Campos",
         "Un champ par ligne : Nom | Valeur": "Um campo por linha: Nome | Valor",
         "Champs côte à côte": "Campos lado a lado",

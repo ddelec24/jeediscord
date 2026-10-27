@@ -28,7 +28,7 @@
 - Correction : le nom de l'objet (résumé d'un objet) et l'âge (nettoyage du salon) s'effaçaient à la réouverture d'un scénario
 - Documentation : procédure détaillée d'envoi des captures du plugin Caméra
 - Envoi de fichiers : une adresse web (http, https) peut remplacer le chemin d'un fichier ; elle est téléchargée dans le dossier temporaire avant l'envoi (sous le nom `sendDiscord.<extension>`), puis supprimée
-- Formulaire « Envoyer un embed » des scénarios redessiné : un champ par ligne, libellés alignés, listes Oui / Non à la place des cases à cocher
+- Formulaire « Envoyer un embed » des scénarios redessiné : un champ par ligne, libellés alignés, listes Oui / Non à la place des cases à cocher, bouton de sélection d'une commande sur tous les champs de texte
 - Documentation : présentation des fonctionnalités, section de dépannage, noms réels des paramètres des commandes slash
 - Correction : les valeurs par défaut de la configuration (port du démon, commandes slash...) n'étaient pas enregistrées à l'installation
 - Réception des messages (contenu, auteur, pièces jointes) et des réactions (emoji, auteur, ajout ou retrait)

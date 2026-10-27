@@ -1,11 +1,17 @@
 <!--template/scenario/cmd.action.message.jeediscordEmbed (plugin jeediscord)-->
 	<div class="input-group input-group-sm" style="width:100%">
 		<span class="input-group-addon roundedLeft" style="width:130px">{{Titre}}</span>
-		<input class="expressionAttr form-control input-sm roundedRight" data-l1key="options" data-l2key="title" value="#title#" data-uid="#uid#" placeholder="{{Titre de l'embed}}">
+		<input class="expressionAttr form-control input-sm" data-l1key="options" data-l2key="title" value="#title#" data-uid="#uid#" placeholder="{{Titre de l'embed}}">
+		<span class="input-group-addon hasBtn roundedRight">
+			<button class="btn btn-default roundedRight jeediscordListCmd" type="button" title="{{Sélectionner une commande}}" data-uid="#uid#" data-target="title"><i class="fas fa-list-alt"></i></button>
+		</span>
 	</div>
 	<div class="input-group input-group-sm" style="width:100%;padding-top:2px">
 		<span class="input-group-addon roundedLeft" style="width:130px">{{Lien du titre}}</span>
-		<input class="expressionAttr form-control input-sm roundedRight" data-l1key="options" data-l2key="url" value="#url#" data-uid="#uid#" placeholder="https://...">
+		<input class="expressionAttr form-control input-sm" data-l1key="options" data-l2key="url" value="#url#" data-uid="#uid#" placeholder="https://...">
+		<span class="input-group-addon hasBtn roundedRight">
+			<button class="btn btn-default roundedRight jeediscordListCmd" type="button" title="{{Sélectionner une commande}}" data-uid="#uid#" data-target="url"><i class="fas fa-list-alt"></i></button>
+		</span>
 	</div>
 	<div class="input-group input-group-sm" style="width:100%;padding-top:2px">
 		<span class="input-group-addon roundedLeft" style="width:130px">{{Description}}</span>
@@ -23,38 +29,53 @@
 	</div>
 	<div class="input-group input-group-sm" style="width:100%;padding-top:2px">
 		<span class="input-group-addon roundedLeft" style="width:130px">{{Champs côte à côte}}</span>
-		<select class="expressionAttr form-control input-sm roundedRight" data-l1key="options" data-l2key="fieldsInline" data-uid="#uid#">
+		<select class="expressionAttr form-control input-sm" data-l1key="options" data-l2key="fieldsInline" data-uid="#uid#">
 			<option value="0">{{Non}}</option>
 			<option value="1">{{Oui}}</option>
 		</select>
+		<span class="input-group-addon hasBtn roundedRight" style="visibility:hidden"><button class="btn btn-default roundedRight" type="button" tabindex="-1"><i class="fas fa-list-alt"></i></button></span>
 	</div>
 	<div class="input-group input-group-sm" style="width:100%;padding-top:2px">
 		<span class="input-group-addon roundedLeft" style="width:130px">{{Image}}</span>
-		<input class="expressionAttr form-control input-sm roundedRight" data-l1key="options" data-l2key="image" value="#image#" data-uid="#uid#" placeholder="{{URL ou chemin d'un fichier image}}">
+		<input class="expressionAttr form-control input-sm" data-l1key="options" data-l2key="image" value="#image#" data-uid="#uid#" placeholder="{{URL ou chemin d'un fichier image}}">
+		<span class="input-group-addon hasBtn roundedRight">
+			<button class="btn btn-default roundedRight jeediscordListCmd" type="button" title="{{Sélectionner une commande}}" data-uid="#uid#" data-target="image"><i class="fas fa-list-alt"></i></button>
+		</span>
 	</div>
 	<div class="input-group input-group-sm" style="width:100%;padding-top:2px">
 		<span class="input-group-addon roundedLeft" style="width:130px">{{Miniature}}</span>
-		<input class="expressionAttr form-control input-sm roundedRight" data-l1key="options" data-l2key="thumbnail" value="#thumbnail#" data-uid="#uid#" placeholder="{{URL}}">
+		<input class="expressionAttr form-control input-sm" data-l1key="options" data-l2key="thumbnail" value="#thumbnail#" data-uid="#uid#" placeholder="{{URL}}">
+		<span class="input-group-addon hasBtn roundedRight">
+			<button class="btn btn-default roundedRight jeediscordListCmd" type="button" title="{{Sélectionner une commande}}" data-uid="#uid#" data-target="thumbnail"><i class="fas fa-list-alt"></i></button>
+		</span>
 	</div>
 	<div class="input-group input-group-sm" style="width:100%;padding-top:2px">
 		<span class="input-group-addon roundedLeft" style="width:130px">{{Pied de page}}</span>
-		<input class="expressionAttr form-control input-sm roundedRight" data-l1key="options" data-l2key="footer" value="#footer#" data-uid="#uid#">
+		<input class="expressionAttr form-control input-sm" data-l1key="options" data-l2key="footer" value="#footer#" data-uid="#uid#">
+		<span class="input-group-addon hasBtn roundedRight">
+			<button class="btn btn-default roundedRight jeediscordListCmd" type="button" title="{{Sélectionner une commande}}" data-uid="#uid#" data-target="footer"><i class="fas fa-list-alt"></i></button>
+		</span>
 	</div>
 	<div class="input-group input-group-sm" style="width:100%;padding-top:2px">
 		<span class="input-group-addon roundedLeft" style="width:130px">{{Horodatage}}</span>
-		<select class="expressionAttr form-control input-sm roundedRight" data-l1key="options" data-l2key="timestamp" data-uid="#uid#">
+		<select class="expressionAttr form-control input-sm" data-l1key="options" data-l2key="timestamp" data-uid="#uid#">
 			<option value="0">{{Non}}</option>
 			<option value="1">{{Oui}}</option>
 		</select>
+		<span class="input-group-addon hasBtn roundedRight" style="visibility:hidden"><button class="btn btn-default roundedRight" type="button" tabindex="-1"><i class="fas fa-list-alt"></i></button></span>
 	</div>
 	<div class="input-group input-group-sm" style="width:100%;padding-top:2px">
 		<span class="input-group-addon roundedLeft" style="width:130px">{{Couleur}}</span>
 		<input type="color" class="form-control input-sm cursor jeediscordColorPicker" data-uid="#uid#" style="width:15%;display:inline-block;padding:2px 4px">
-		<input class="expressionAttr form-control input-sm roundedRight" data-l1key="options" data-l2key="color" value="#color#" data-uid="#uid#" style="width:85%" placeholder="{{Par défaut : couleur de l'équipement}}">
+		<input class="expressionAttr form-control input-sm" data-l1key="options" data-l2key="color" value="#color#" data-uid="#uid#" style="width:85%" placeholder="{{Par défaut : couleur de l'équipement}}">
+		<span class="input-group-addon hasBtn roundedRight" style="visibility:hidden"><button class="btn btn-default roundedRight" type="button" tabindex="-1"><i class="fas fa-list-alt"></i></button></span>
 	</div>
 	<div class="input-group input-group-sm" style="width:100%;padding-top:2px">
 		<span class="input-group-addon roundedLeft" style="width:130px">{{Texte au-dessus}}</span>
-		<input class="expressionAttr form-control input-sm roundedRight" data-l1key="options" data-l2key="content" value="#content#" data-uid="#uid#" placeholder="{{Texte affiché au-dessus de l'embed (optionnel, pour notifier avec une mention)}}">
+		<input class="expressionAttr form-control input-sm" data-l1key="options" data-l2key="content" value="#content#" data-uid="#uid#" placeholder="{{Texte affiché au-dessus de l'embed (optionnel, pour notifier avec une mention)}}">
+		<span class="input-group-addon hasBtn roundedRight">
+			<button class="btn btn-default roundedRight jeediscordListCmd" type="button" title="{{Sélectionner une commande}}" data-uid="#uid#" data-target="content"><i class="fas fa-list-alt"></i></button>
+		</span>
 	</div>
 <script>
 	(function() {
