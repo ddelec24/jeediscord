@@ -1,4 +1,4 @@
-# JeeDiscord plugin - BETA
+# JeeDiscord plugin - STABLE
 
 
 ![jeediscord_icon](../images/jeediscord_icon.png)

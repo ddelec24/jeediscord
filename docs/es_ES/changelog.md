@@ -4,6 +4,10 @@
 >
 >Si no hay información sobre la actualización, es que solo se trata de una actualización de documentación, de traducción o de texto.
 
+# 28/10/2026
+
+- Paso a la versión estable
+
 # 26/10/2026
 
 - Creación del plugin: estructura, configuración del bot, equipo «canal de Discord»

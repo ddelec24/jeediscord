@@ -4,6 +4,10 @@
 >
 >Se não houver informação sobre a atualização, é porque diz respeito apenas a uma atualização da documentação, da tradução ou de textos.
 
+# 28/10/2026
+
+- Passagem à versão estável
+
 # 26/10/2026
 
 - Criação do plugin: estrutura, configuração do bot, equipamento «canal Discord»

@@ -1,4 +1,4 @@
-# Плагин JeeDiscord - BETA
+# Плагин JeeDiscord - STABLE
 
 
 ![jeediscord_icon](../images/jeediscord_icon.png)

@@ -4,6 +4,10 @@
 >
 >Gibt es keine Informationen zum Update, betrifft es nur ein Update der Dokumentation, der Übersetzung oder von Texten.
 
+# 28/10/2026
+
+- Übergang zur stabilen Version
+
 # 26/10/2026
 
 - Erstellung des Plugins: Struktur, Konfiguration des Bots, Gerät „Discord-Kanal“

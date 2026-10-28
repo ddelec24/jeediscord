@@ -4,6 +4,10 @@
 >
 >If there is no information about an update, it only concerns documentation, translation or text updates.
 
+# 28/10/2026
+
+- Switch to the stable version
+
 # 26/10/2026
 
 - Plugin creation: structure, bot configuration, "Discord channel" equipment
